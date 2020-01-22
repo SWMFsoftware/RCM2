@@ -9,7 +9,6 @@ help:
 	@echo ' '
 
 install:
-	touch src/Makefile.DEPEND
 
 LIB:
 	cd src; make LIB
