@@ -424,14 +424,17 @@ contains
   !===========================================================================
   subroutine IM_put_from_gm_crcm(Integral_IIV, Kp, &
        iSizeIn, jSizeIn, nIntegralIn, &
-       BufferLine_VI, nVarLine, nPointLine, NameVar, tSimulation)
+       BufferLine_VI, nVarLine, nPointLine, NameVar, BufferSolarWind_V,&
+       tSimulation)
 
     integer, intent(in) :: iSizeIn, jSizeIn, nIntegralIn
     real,    intent(in) :: Integral_IIV(iSizeIn,jSizeIn,nIntegralIn)
     real,    intent(in) :: Kp
     integer, intent(in) :: nVarLine, nPointLine
     real,    intent(in) :: BufferLine_VI(nVarLine, nPointLine)
+    real,    intent(in) :: BufferSolarWind_V(8)
     real,    intent(in) :: tSimulation
+    
     character (len=*), intent(in) :: NameVar
 
     character (len=*), parameter :: NameSub='IM_put_from_gm_crcm'
