@@ -348,8 +348,4 @@ The default is UseDecay false.
 
 </commandgroup>
 
-<rule expr="-d 'IM/restartOUT' or not $_IsFirstSession">
-	Directory IM/restartOUT should exist!
-</rule>
-
 </commandList>
