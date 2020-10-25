@@ -18,7 +18,7 @@ RCM:
 	cd src; make RCM
 
 test:
-	@echo "There is no test for RCM2" > notest.diff
+	@echo "There is no test for RCM2"
 
 rundir:
 	mkdir ${RUNDIR}/IM
