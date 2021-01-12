@@ -2863,7 +2863,9 @@ print*,npoint
 !
     DO k = k_init, k_final
 !
-       WRITE (ntp, 810) k, alam(k), eta(k), mpoint(k), npoint(k)
+       WRITE (ntp, "(/ T02, 'K=', I3.3, TR2, 'ALAM=', ES9.2, TR2, 'ETA=', ES10.2,&
+            &TR2, 'MPOINT=', I5, TR2, 'NPOINT=', I5)" ) &
+            k, alam(k), eta(k), mpoint(k), npoint(k)
 !
        mbeg = mpoint (k)
        mend = mbeg + npoint (k) - 1
@@ -2875,18 +2877,15 @@ print*,npoint
              mk = mk + 1
              vmtrp (mk) = Gntrp_2d (vm, isize, jsize, bi(m), bj(m))
           END DO
-          WRITE (ntp, 820) (itrack(m), bi(m), bj(m), etab(m), &
-                            vmtrp (m-mbeg+1), m = mbeg, mfinal )
+          WRITE (ntp, "(3(TR2, I6.6, '(', TR1, F5.2, ',', TR1, F5.2, ',', &
+              &E10.2, ',', F5.2,')') )" ) &
+              (itrack(m), bi(m), bj(m), etab(m), vmtrp (m-mbeg+1), &
+              m = mbeg, mfinal )
           IF (mfinal == mend) EXIT
           mbeg = mfinal + 1
        END DO
 !
     END DO
-!
- 810  FORMAT (/ T02, 'K=', I3.3, TR2, 'ALAM=', ES9.2, TR2, 'ETA=', ES10.2,&
-                TR2, 'MPOINT=', I5, TR2, 'NPOINT=', I5)
- 820  FORMAT (3(TR2, I6.6, '(', TR1, F5.2, ',', TR1, F5.2, ',', &
-              E10.2, ',', F5.2,')') )
 !
     RETURN
     END SUBROUTINE Outbij
