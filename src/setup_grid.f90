@@ -1,9 +1,11 @@
 PROGRAM Rcm_setup_grid
+
   USE Rcm_variables, ONLY : iprec, rprec, pi, pi_two, DTR, besu, HTR,&
        dlam, dpsi, Re, Ri, RTH, RTD, &
        LUN, label, n_gc, &
        colat, aloct, alpha, beta, vcorot, sini, bir
   USE Rcm_io
+
   IMPLICIT NONE
   !
   !xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -347,7 +349,7 @@ PROGRAM Rcm_setup_grid
 CONTAINS
   !
   SUBROUTINE Make_msm_grid ()
-    IMPLICIT NONE
+
     INTEGER (iprec) :: i, j
     !
     colat_msm (1,:) = 1.000344_rprec * DTR
@@ -368,15 +370,14 @@ CONTAINS
     aloct_msm (:,jsize_msm) = aloct_msm(:,jwrap_msm)
     aloct_msm (:, 1   ) = aloct_msm(:,jsize_msm-jwrap_msm+1)
     aloct_msm (:, 2   ) = aloct_msm(:,jsize_msm-jwrap_msm+2)
-    !
-    RETURN
+
   END SUBROUTINE Make_msm_grid
   !
   !
   !=========================================
   !
   FUNCTION Theta_of_i (i, dtheta_di_max, dtheta_di_min, delta_i, i_pc, i_pp)
-    IMPLICIT NONE
+
     INTEGER (iprec), INTENT (IN) :: i, delta_i, i_pc, i_pp
     REAL (rprec), INTENT (IN) :: dtheta_di_max, dtheta_di_min
     REAL (rprec) :: Theta_of_i
@@ -390,7 +391,7 @@ CONTAINS
          F_wolf ( REAL(i_pc-1) / REAL(delta_i) )-    &
          F_wolf ( REAL(1-i_pp) / REAL(delta_i) )     &
          )
-    RETURN
+
   END FUNCTION Theta_of_i
   !
   !
@@ -398,7 +399,7 @@ CONTAINS
   !
   FUNCTION DTheta_di_of_i (i,dtheta_di_max, dtheta_di_min, delta_i, &
        i_pc, i_pp)
-    IMPLICIT NONE
+
     INTEGER (iprec), INTENT (IN) :: i, delta_i, i_pc, i_pp
     REAL (rprec), INTENT (IN) :: dtheta_di_max, dtheta_di_min
     REAL (rprec) :: DTheta_di_of_i
@@ -408,33 +409,33 @@ CONTAINS
     DTheta_di_of_i = dtheta_di_max + (dtheta_di_max-dtheta_di_min) / pi * &
          (ATAN (REAL(i_pc-i)/REAL(delta_i)) + &
          ATAN (REAL(i-i_pp)/REAL(delta_i)) )
-    RETURN
+
   END FUNCTION DTheta_di_of_i
   !
   !
   !===========================================
   !
   FUNCTION F_wolf (x)
-    IMPLICIT NONE
+
     REAL (rprec), INTENT (IN) :: x
     REAL (rprec) :: F_wolf
     F_wolf = x*ATAN(x)-0.5*LOG(x**2+1)
-    RETURN
+
   END FUNCTION F_wolf
   !
   !
   !
-  !   SUBROUTINE Make_grid_arrays (isize,jsize)
-  !   IMPLICIT NONE
-  !   INTEGER (iprec), INTENT (IN) :: isize,jsize
-  !   ALLOCATE ( colat(1-n_gc:isize,1-n_gc:jsize), aloct (1-n_gc:isize,1-n_gc:jsize), &
-  !              alpha(1-n_gc:isize,1-n_gc:jsize), beta  (1-n_gc:isize,1-n_gc:jsize), &
-  !              sini (1-n_gc:isize,1-n_gc:jsize), bir   (1-n_gc:isize,1-n_gc:jsize), &
-  !              vcorot(1-n_gc:isize,1-n_gc:jsize),msm_mask (1-n_gc:isize,1-n_gc:jsize),&
-  !              msm_i_index(1-n_gc:isize,jsize), msm_j_index(1-n_gc:isize,1-n_gc:jsize),&
-  !              STAT = istat)
-  !   IF (istat /= 0) STOP 'FAILURE TO ALLOCATE'
-  !   RETURN
-  !   END SUBROUTINE Make_grid_arrays
+  !SUBROUTINE Make_grid_arrays (isize,jsize)
+  !
+  !INTEGER (iprec), INTENT (IN) :: isize,jsize
+  !ALLOCATE( colat(1-n_gc:isize,1-n_gc:jsize), aloct (1-n_gc:isize,1-n_gc:jsize), &
+  !           alpha(1-n_gc:isize,1-n_gc:jsize), beta  (1-n_gc:isize,1-n_gc:jsize), &
+  !           sini (1-n_gc:isize,1-n_gc:jsize), bir   (1-n_gc:isize,1-n_gc:jsize), &
+  !           vcorot(1-n_gc:isize,1-n_gc:jsize),msm_mask (1-n_gc:isize,1-n_gc:jsize),&
+  !           msm_i_index(1-n_gc:isize,jsize), msm_j_index(1-n_gc:isize,1-n_gc:jsize),&
+  !           STAT = istat)
+  !IF (istat /= 0) STOP 'FAILURE TO ALLOCATE'
+
+  !END SUBROUTINE Make_grid_arrays
   !
 END PROGRAM Rcm_setup_grid

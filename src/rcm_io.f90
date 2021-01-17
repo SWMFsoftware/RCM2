@@ -76,6 +76,7 @@ CONTAINS
     END IF
     CLOSE (UNIT = LUN)
     RETURN
+
 1   IF (PRESENT (error_flag)) THEN
        error_flag = .TRUE.
     ELSE

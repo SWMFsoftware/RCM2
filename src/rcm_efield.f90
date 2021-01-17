@@ -7,18 +7,20 @@ module RCM_efield
 
   implicit none
 
-contains
+  private
 
-  SUBROUTINE RCM_Compute_ionospheric_potential
+  public:: compute_efield
+  
+contains
+  !============================================================================
+  subroutine compute_efield
 
     ! a separate RCM routine to handle solving for
     ! ionospheric potential including setting the
     ! boundary condition (at high-L boundary)
 
     INTEGER :: j, info_bicgstab
-
-
-
+    !--------------------------------------------------------------------------
     IF (ipot == 4) then    ! GMRES
 
        !  Note: new_cfive thinks c5w is the old c5w without d
@@ -74,15 +76,11 @@ contains
        !
     END IF
 
+  end subroutine compute_efield
 
-    RETURN
-  END SUBROUTINE RCM_Compute_ionospheric_potential
+  !============================================================================
 
-
-
-
-
-  SUBROUTINE Get_potential_on_bndy
+  subroutine get_potential_on_bndy
 
     INTEGER (iprec) :: j
     REAL    (rprec) :: r_eq, p_eq
@@ -123,9 +121,9 @@ contains
       A_coeff_MC = 0.045_rprec / (1.0_rprec-0.159_rprec*Kp+0.0093_rprec*Kp**2)**3
 
     END FUNCTION A_coeff_MC
-    !
-  END SUBROUTINE Get_potential_on_bndy
-  !===================================================================================
+
+  end subroutine Get_potential_on_bndy
+  !===========================================================================
   subroutine RCM_bicgstab(matvec,rhs,qx,n,tol,typestop,iter,info)
 
     ! Simple BiCGstab(\ell=1) iterative method
@@ -301,7 +299,7 @@ contains
        if(oktest) print *,'RCM_BiCGSTAB: nothing to do. info = ',info
        iter = nmv
        info = 3
-       return
+       RETURN
     end if
 
     do while (GoOn)
@@ -316,7 +314,7 @@ contains
 
        if (abs(rho0)<assumedzero**2) then
           info = 1
-          return
+          RETURN
        endif
        beta = alpha*(rho1/rho0)
        rho0 = rho1
@@ -329,7 +327,7 @@ contains
 
        if (abs(sigma)<assumedzero**2) then
           info = 1
-          return
+          RETURN
        endif
 
        alpha = rho1/sigma
@@ -492,8 +490,7 @@ contains
 
     end function dot_product_mpi
 
-    !============================================================================
-
+    !==========================================================================
   end subroutine RCM_bicgstab
   
 end module RCM_efield

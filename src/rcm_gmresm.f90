@@ -6,7 +6,7 @@ contains
 
   SUBROUTINE Gmresm (Matvec, N, x0, b, tol, iter_max)
     USE Rcm_variables, ONLY : iprec, rprec, n_gc
-    IMPLICIT NONE
+
     INTEGER (iprec), INTENT (IN) :: n
     REAL (rprec), INTENT (IN) :: b(n), tol
     REAL (rprec), INTENT (IN OUT) :: x0(n)
@@ -187,9 +187,7 @@ contains
        call CON_stop('ERROR in IM/RCM2/src/gmresm.f90: '// &
             'no convergence in GMRES(m)')
     END IF
-    !
-    RETURN
-    !
+
   END SUBROUTINE Gmresm
   !
   !
@@ -203,8 +201,7 @@ contains
          i_column => i_column_pde, &
          diag_ptr => diag_ptr_pde, &
          pivots => pivots_pde
-    IMPLICIT NONE
-    !_____________________________________________________________________________
+
     !     Compute the preconditioner M. Matrix A is split as A = L_a + D_a + U_a
     !     (strictly-lower triangular, diagonal and strictly-upper triangular).
     !     Then M = L * U = (D + L_a) * D^(-1) * (D + U_a), so only need to find
@@ -236,7 +233,7 @@ contains
           END IF
        END DO
     END DO
-    RETURN
+
   END SUBROUTINE Gmresm_Compute_DILU
   !
   !
@@ -244,7 +241,7 @@ contains
   !
   SUBROUTINE Gmresm_Rotate_vector(v_in, cos_theta, sin_theta, v_out)
     USE Rcm_variables, ONLY : rprec
-    IMPLICIT NONE
+
     REAL (rprec), INTENT (IN) :: v_in (2), cos_theta, sin_theta
     REAL (rprec), INTENT (OUT) :: v_out (2)
     !___________________________________________________________________________
@@ -257,7 +254,7 @@ contains
     temp                = cos_theta * v_in (1) - sin_theta * v_in (2)
     v_out(2)    = sin_theta * v_in (1) + cos_theta * v_in (2)
     v_out(1)    = temp
-    RETURN
+
   END SUBROUTINE Gmresm_Rotate_vector
   !
   !
@@ -269,7 +266,7 @@ contains
          diag_ptr => diag_ptr_pde, &
          i_column => i_column_pde, &
          pivots => pivots_pde
-    IMPLICIT NONE
+
     INTEGER (iprec), INTENT (IN) :: n
     REAL (rprec), INTENT (IN) :: x (n)
     REAL (rprec), INTENT (OUT) :: y(n)
@@ -310,7 +307,7 @@ contains
        END DO
        y (i) = y (i) - pivots (i) * tmp
     END DO
-    RETURN
+
   END SUBROUTINE Gmresm_Msolve
   !
   !
@@ -318,7 +315,7 @@ contains
   !
   SUBROUTINE Gmresm_u_solve (a, b_rhs, nmax, n, xs) 
     USE rcm_variables, ONLY : iprec, rprec
-    IMPLICIT NONE
+
     INTEGER (iprec), INTENT (IN) :: n, nmax
     REAL (rprec), INTENT (IN) :: a (nmax+1,nmax), b_rhs (nmax)
     REAL (rprec), INTENT (OUT) :: xs (n)
@@ -336,14 +333,14 @@ contains
        xs (j)     = xs (j) / a (j,j)
        xs (1:j-1) = xs (1:j-1) - xs (j) * a(1:j-1,j)
     END DO
-    RETURN
+
   END SUBROUTINE Gmresm_u_solve
   !
   !
   !
   SUBROUTINE Gmresm_Get_rotation ( vector_in, cos_theta, sin_theta )
     USE rcm_variables, ONLY : rprec
-    IMPLICIT NONE
+
     REAL (rprec), INTENT (IN)  :: vector_in (2)
     REAL (rprec), INTENT (OUT) :: cos_theta, sin_theta
     !_____________________________________________________________________________
@@ -375,8 +372,7 @@ contains
        cos_theta = 1.0_rprec / SQRT( 1.0_rprec + temp**2 )
        sin_theta = temp * cos_theta
     END IF
-    !
-    RETURN
+
   END SUBROUTINE Gmresm_Get_rotation
   !
   !
@@ -384,15 +380,15 @@ contains
   SUBROUTINE Gmresm_Matvec (x, y, n)
     USE Rcm_variables, ONLY : iprec, rprec, &
          a_mtrx_pde, i_column_pde, row_ptr_pde
-    IMPLICIT NONE
+
     INTEGER (iprec), INTENT (IN) :: n
     REAL (rprec), INTENT (IN)    :: x (n)
     REAL (rprec), INTENT (OUT)   :: y(n)
-    !____________________________________________________________________________
-    !     subroutine to form matrix-vector product. Matrix A of size NxN
-    !     is assumed to be sparse and is stored in the compressed-row (CRS) format.
-    !     We compute y = A*x, where y and x are both vectors of length N.
-    !____________________________________________________________________________
+
+    ! subroutine to form matrix-vector product. Matrix A of size NxN
+    ! is assumed to be sparse and is stored in the compressed-row (CRS) format.
+    ! We compute y = A*x, where y and x are both vectors of length N.
+
     !
     INTEGER (iprec) :: i, j
     !
@@ -402,7 +398,7 @@ contains
           y (i) = y (i) + a_mtrx_pde(j) * x (i_column_pde(j) )
        END DO
     END DO
-    RETURN
+
   END SUBROUTINE Gmresm_Matvec
   !
   !
@@ -437,16 +433,14 @@ contains
          rowpt => row_ptr_pde, &
          dmtrx => diag_ptr_pde, &
          xinit => x0_pde
-    IMPLICIT NONE
-    !_____________________________________________________________________________
-    !     This subroutine is used in conjuntion with a general-purpose linear 
-    !     system solver to solve the elliptic PDE for the electrostatic potential.
-    !     Subroutine returns:
-    !       matrix A stored in 3 vectors AMTRX, ICLMN, ROWPT in CRS format
-    !         (also, DIAGPT holds locations for diagonal elements),
-    !       right-hand side vector BMTRX,
-    !       initial approximation to solution in vector XINIT.
-    !_____________________________________________________________________________
+
+    ! This subroutine is used in conjuntion with a general-purpose linear 
+    ! system solver to solve the elliptic PDE for the electrostatic potential.
+    ! Subroutine returns:
+    !   matrix A stored in 3 vectors AMTRX, ICLMN, ROWPT in CRS format
+    !     (also, DIAGPT holds locations for diagonal elements),
+    !   right-hand side vector BMTRX,
+    !   initial approximation to solution in vector XINIT.
     !
     INTEGER (iprec):: i, j, L, krow
     !

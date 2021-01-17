@@ -5,6 +5,7 @@ MODULE Hilmer_Voigt_subs_mod
   use ModIoUnit, ONLY : io_unit_new
 
   IMPLICIT NONE
+  
   INTEGER, PARAMETER :: LATDIM = 62, LTDIM = 51
   REAL :: vm_msm (latdim,ltdim), be_msm (latdim,ltdim), &
        xmin_msm (latdim,ltdim), ymin_msm (latdim,ltdim), &
@@ -29,7 +30,7 @@ MODULE Hilmer_Voigt_subs_mod
 CONTAINS
 
   SUBROUTINE Getmat (iwant, latdim, ltdim, bfpar, work, bflim, bfexst)
-    IMPLICIT NONE
+
     INTEGER, INTENT (IN) :: iwant, latdim, ltdim
     REAL,    INTENT (IN) :: bfpar (5)
     REAL,    INTENT (OUT):: bflim (2, 5)
@@ -170,12 +171,12 @@ CONTAINS
          TR1, 'EQEDGE= ',   F5.2, &
          TR1, 'DST= ',      F5.0, &
          TR1, 'COLLAPSE= ', F3.0    )
-    RETURN
+
   END SUBROUTINE Getmat
   !
   !
   SUBROUTINE Rmvbsh (work, latdim, ltdim, iwant)
-    IMPLICIT NONE
+
     INTEGER, INTENT (IN) :: latdim, ltdim, iwant
     REAL,    INTENT (IN OUT) :: work (latdim,ltdim,2,2,2,2,2)
     !
@@ -245,14 +246,14 @@ CONTAINS
           END DO
        END DO
     END DO
-    RETURN
+
   END SUBROUTINE Rmvbsh
   !
   !
   !
   !
   SUBROUTINE Fndbrk (parval, pvals, ipdim, indmin, indmax)
-    IMPLICIT NONE
+
     INTEGER, INTENT (IN) :: ipdim
     REAL,    INTENT (IN) :: parval, pvals (ipdim)
     INTEGER, INTENT (OUT):: indmin, indmax
@@ -286,13 +287,13 @@ CONTAINS
        indmax = indmin + 1
        IF (parval <= pvals(indmax) .OR. indmax >= ipdim) EXIT
     END DO
-    RETURN
+
   END SUBROUTINE Fndbrk
   !
   !
   !
   SUBROUTINE Loadbm (iwant, latdim, ltdim, i, j, k, l, m, bfndx, work)
-    IMPLICIT NONE
+
     INTEGER, INTENT (IN) :: iwant, latdim, ltdim, i, j, k, l, m, bfndx(2,5)
     REAL, INTENT (IN OUT) ::  work(latdim,ltdim,2,2,2,2,2)
     !
@@ -457,15 +458,16 @@ CONTAINS
        !
     END IF
     CLOSE (LUN)
-    RETURN
+
 800 FORMAT(2I1,2I2.2,I1,I3)
 801 FORMAT(11E12.4)
+
   END SUBROUTINE Loadbm
   !
   !
   !
   SUBROUTINE Zerobm (latdim, ltdim, i, j, k, l, m, work)
-    IMPLICIT NONE
+
     INTEGER, INTENT (IN) :: latdim, ltdim, i, j, k, l, m
     REAL, INTENT (IN OUT) :: work (latdim, ltdim, 2, 2, 2, 2, 2)
     !
@@ -490,7 +492,7 @@ CONTAINS
     !
     !
     work (1:latdim, 1:ltdim, i, j, k, l, m) = 0.0
-    RETURN
+
   END SUBROUTINE Zerobm
   !
   !
@@ -498,7 +500,7 @@ CONTAINS
   !
   !
   FUNCTION Mexist (mstnd, mtilt, mined, mdst, mstch)
-    IMPLICIT NONE
+
     INTEGER, INTENT (IN) :: mstnd, mtilt, mined, mdst, mstch
     LOGICAL :: Mexist
     !
@@ -528,18 +530,18 @@ CONTAINS
     !
     filnam = Get_filnam (mstnd, mtilt, mined, mdst, mstch)
     INQUIRE (FILE = trim(NameRcmDir)//TRIM (filnam), EXIST = Mexist)
-    RETURN
+
   END FUNCTION Mexist
   !
   !
   !
   FUNCTION Get_filnam (mstnd, mtilt, mined, mdst, mstch)
-    IMPLICIT NONE
+
     INTEGER, INTENT (IN) :: mstnd, mtilt, mined, mdst, mstch
     CHARACTER (LEN=80) :: Get_filnam
     !
     WRITE (Get_filnam, format_prefix) prefix, mtilt, mstnd, mdst, mined, (3-mstch)
-    RETURN
+
   END FUNCTION Get_filnam
   !
   !
@@ -547,7 +549,7 @@ CONTAINS
   !
   SUBROUTINE Btrace (latdim, ltdim, itmdim, l, fstoff, feqedg, fdst, &
        fclpse, ftilt, vm, bmin, xmin, ymin, zmin)
-    IMPLICIT NONE
+
     INTEGER, INTENT (IN) :: latdim, ltdim, itmdim, l
     REAL,    INTENT (IN) :: fstoff, feqedg, fdst, fclpse, ftilt
     REAL, INTENT (IN OUT) :: vm (latdim,ltdim,itmdim), &
@@ -763,8 +765,7 @@ CONTAINS
           END IF
        END DO
     END DO
-    !
-    RETURN
+
   END SUBROUTINE Btrace
-  !
+
 END MODULE Hilmer_Voigt_subs_mod

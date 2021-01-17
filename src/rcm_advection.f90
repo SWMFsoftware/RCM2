@@ -11,10 +11,14 @@ module RCM_advection
        set_precipitation_rates, zap_edge, wrap_around_ghostcells
 
   use RCM_efield, ONLY: &
-       rcm_compute_ionospheric_potential
+       compute_efield
 
   implicit none
 
+  private
+
+  public :: rcm_advec
+  
 contains
   !===========================================================================
 
@@ -422,8 +426,7 @@ contains
           !
           CALL Comput (i_time, dt)
 
-          CALL RCM_Compute_ionospheric_potential
-
+          CALL compute_efield
 
           IF (i_time == itcln) THEN
              !sys       CALL Clean_up_edges ()

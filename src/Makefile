@@ -39,7 +39,6 @@ RCMLIBRARY = \
   IM_wrapper.o
 
 RCMOBJECTS = \
-  ModProcRCM.o\
   rcm_variables.o \
   rcm_io.o \
   rcm_routines.o \
