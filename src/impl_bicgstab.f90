@@ -90,12 +90,12 @@ subroutine impl_bicgstab(matvec,rhs,qx,n,tol,typestop,iter,info)
   !                 - - residual did not reduce
 
   ! Local parameters
-  
+
   integer, parameter :: qz_=1,zz_=3,y0_=5,yl_=6,qy_=7
-  
+
   ! Local variables (only 4 big vectors are needed):
 
-  !!! Automatic arrays !!!
+!!! Automatic arrays !!!
   real, dimension(n):: bicg_r, bicg_u, bicg_r1, bicg_u1
 
   real :: rwork(2,7)
@@ -120,7 +120,7 @@ subroutine impl_bicgstab(matvec,rhs,qx,n,tol,typestop,iter,info)
   !
   !     --- Initialize first residual
   !
-! assumedzero = 1.e-16
+  ! assumedzero = 1.e-16
   assumedzero = 2.e-7
   bicg_u=0.0
   bicg_r=rhs
@@ -149,19 +149,19 @@ subroutine impl_bicgstab(matvec,rhs,qx,n,tol,typestop,iter,info)
   !     --- Iterate
   !
   select case(typestop)
-     case('rel')
+  case('rel')
      GoOn = rnrm>tol*rnrm0 .and. nmv<iter
      assumedzero = assumedzero*rnrm0
      rnrmMax = 0
      rnrmMax0 = 0
 
-     case('abs')
+  case('abs')
      GoOn = rnrm>tol       .and. nmv<iter
      assumedzero = assumedzero*rnrm0
      rnrmMax = 0
      rnrmMax0 = 0
 
-     case('max')
+  case('max')
      rnrmMax0 = maxval_abs_mpi(bicg_r,n)
      rnrmMax  = rnrmMax0
      if(oktest) print *,'initial rnrmMax:',rnrmMax
@@ -195,10 +195,10 @@ subroutine impl_bicgstab(matvec,rhs,qx,n,tol,typestop,iter,info)
      beta = alpha*(rho1/rho0)
      rho0 = rho1
      bicg_u = bicg_r - beta*bicg_u
-      
+
      call matvec(bicg_u,bicg_u1,n)
      nmv = nmv+1
-     
+
      sigma=dot_product_mpi(rhs,bicg_u1,n)
 
      if (abs(sigma)<assumedzero**2) then
@@ -213,25 +213,25 @@ subroutine impl_bicgstab(matvec,rhs,qx,n,tol,typestop,iter,info)
 
      call matvec(bicg_r,bicg_r1,n)
      nmv = nmv+1
-      
+
      rnrm = sqrt( dot_product_mpi(bicg_r,bicg_r,n) )
-      
+
      mxnrmx = max (mxnrmx, rnrm)
      mxnrmr = max (mxnrmr, rnrm)
 
      !DEBUG
      if(oktest)&
-!!        write(*,*)'rho0, rho1, beta, sigma, alpha, rnrm:',&
-!!        rho0, rho1, beta, sigma, alpha, rnrm
-
-     !
-     !  ==================================
-     !  --- The convex polynomial part ---
-     !  ================================== 
-     !
-     !    --- Z = R'R a 2 by 2 matrix
-     ! i=1,j=0
-     rwork(1,1) = dot_product_mpi(bicg_r,bicg_r,n)
+          !!        write(*,*)'rho0, rho1, beta, sigma, alpha, rnrm:',&
+          !!        rho0, rho1, beta, sigma, alpha, rnrm
+          
+                                !
+                                !  ==================================
+                                !  --- The convex polynomial part ---
+                                !  ================================== 
+                                !
+                                !    --- Z = R'R a 2 by 2 matrix
+                                ! i=1,j=0
+          rwork(1,1) = dot_product_mpi(bicg_r,bicg_r,n)
 
      ! i=1,j=1
      rwork(2,1) = dot_product_mpi(bicg_r1,bicg_r,n)
@@ -246,19 +246,19 @@ subroutine impl_bicgstab(matvec,rhs,qx,n,tol,typestop,iter,info)
      rwork(1:2,zz_:zz_+1)   = rwork(1:2,qz_:qz_+1)
      rwork(1,y0_) = -1.0
      rwork(2,y0_) = 0.0
-     
+
      rwork(1,yl_) = 0.0
      rwork(2,yl_) = -1.0
      !
      !   --- Convex combination
      !
      rwork(1:2,qy_) = rwork(1,yl_)*rwork(1:2,qz_) + &
-                      rwork(2,yl_)*rwork(1:2,qz_+1)
+          rwork(2,yl_)*rwork(1:2,qz_+1)
 
      kappal = sqrt( sum( rwork(1:2,yl_)*rwork(1:2,qy_) ) )
 
      rwork(1:2,qy_) = rwork(1,y0_)*rwork(1:2,qz_) + &
-                      rwork(2,y0_)*rwork(1:2,qz_+1)
+          rwork(2,y0_)*rwork(1:2,qz_+1)
 
      kappa0 = sqrt( sum( rwork(1:2,y0_)*rwork(1:2,qy_) ) )
 
@@ -281,26 +281,26 @@ subroutine impl_bicgstab(matvec,rhs,qx,n,tol,typestop,iter,info)
      bicg_r = bicg_r - omega*bicg_r1
 
      rwork(1:2,qy_) = rwork(1,y0_)*rwork(1:2,qz_) + &
-                      rwork(2,y0_)*rwork(1:2,qz_+1)
+          rwork(2,y0_)*rwork(1:2,qz_+1)
 
      rnrm = sqrt( sum( rwork(1:2,y0_)*rwork(1:2,qy_) ) )
-     
-     select case(typestop)
-        case('rel')
-        GoOn = rnrm>tol*rnrm0 .and. nmv<iter
-!       if(oktest) print *, nmv,' matvecs, ', ' ||rn||/||r0|| =',rnrm/rnrm0
 
-        case('abs')
+     select case(typestop)
+     case('rel')
+        GoOn = rnrm>tol*rnrm0 .and. nmv<iter
+        !       if(oktest) print *, nmv,' matvecs, ', ' ||rn||/||r0|| =',rnrm/rnrm0
+
+     case('abs')
         GoOn = rnrm>tol       .and. nmv<iter
         if(oktest) print *, nmv,' matvecs, ||rn|| =',rnrm
-        
-        case('max')
+
+     case('max')
         rnrmMax = maxval_abs_mpi(bicg_r,n)
 
         GoOn = rnrmMax>tol    .and. nmv<iter
         if(oktest) print *, nmv,' matvecs, max(rn) =',rnrmMax
      end select
-   
+
   end do
   !
   !     =========================
@@ -308,15 +308,15 @@ subroutine impl_bicgstab(matvec,rhs,qx,n,tol,typestop,iter,info)
   !     =========================
 
   select case(typestop)
-     case('rel')
+  case('rel')
      if (rnrm>tol*rnrm0) info = 2
      tol = rnrm/rnrm0
 
-     case('abs')
+  case('abs')
      if (rnrm>tol) info = 2
      tol = rnrm
 
-     case('max')
+  case('max')
      if (rnrmMax>tol) info = 2
      tol = rnrmMax
   end select
@@ -330,7 +330,7 @@ contains
 
   !============================================================================
   real function maxval_abs_mpi(a,n)
-  
+
     implicit none
     integer, intent(in) :: n
     real, intent(in)    :: a(n)
@@ -342,7 +342,7 @@ contains
     local_max_abs = maxval(abs(a))
 
     call MPI_allreduce(local_max_abs, global_max_abs, 1, MPI_REAL, MPI_MAX, &
-          iComm, ira)
+         iComm, ira)
 
     maxval_abs_mpi = global_max_abs
 
@@ -350,7 +350,7 @@ contains
 
   !============================================================================
   real function dot_product_mpi(a,b,n)
-  
+
     implicit none
     integer, intent(in) :: n
     real, intent(in)    :: a(n), b(n)
@@ -371,16 +371,16 @@ contains
   !============================================================================
 
   SUBROUTINE Stop_mpi (str)
-  use ModMpiOrig
-  IMPLICIT NONE
-  CHARACTER (LEN=*), INTENT (IN) :: str
-  INTEGER :: erno, ira
-  WRITE (*,*) str
-  CALL MPI_abort (iComm, erno, ira)
-  call CON_stop('ERROR in IM/RCM2/src/impl_bicgstab.f90')
+    use ModMpiOrig
+
+    character (len=*), INTENT (IN) :: str
+    integer :: erno, ira
+    write (*,*) str
+    call MPI_abort (iComm, erno, ira)
+    call CON_stop('ERROR in IM/RCM2/src/impl_bicgstab.f90')
   END SUBROUTINE Stop_mpi
-!
-!
+  !
+  !
 end subroutine impl_bicgstab
 
 

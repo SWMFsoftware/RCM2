@@ -6,6 +6,9 @@ module IM_wrapper
 
   ! Wrapper for RCM Internal Magnetosphere (IM) component
 
+  use RCM_advection, ONLY: RCM_advec
+  use RCM_routines, ONLY: wrap_around_ghostcells
+  
   implicit none
 
   private ! except
@@ -34,13 +37,13 @@ contains
   subroutine IM_set_param(CompInfo, TypeAction)
 
     use CON_comp_info
-    use ModProcRCM
+
     use RCM_variables, ONLY: NameRcmDir, iUnitOut, StringPrefix, STDOUT_, &
          DoRestart, iDtRcm, iDtPlot, asci_flag, nFilesPlot, iDnPlot, &
          plot_area, plot_var, plot_format, UseEventPlotName, &
          x_h, x_o, L_dktime, sunspot_number, f107, doy, &
          ipot, ibnd_type, precipitation_tau, UseDecay, DecayTimescale, &
-         NameCompModel, F107young
+         NameCompModel, F107young, iProc, nProc, iComm
     use ModReadParam
     use ModUtilities, ONLY: fix_dir_name, check_dir, lower_case
 
@@ -233,10 +236,10 @@ contains
 
   !============================================================================
   subroutine IM_set_grid
-    use ModProcRCM
+
     use ModNumConst
     use CON_coupler, ONLY: set_grid_descriptor, is_proc, IM_
-    use Rcm_variables, ONLY: iSize, jSize, colat, aloct, Ri
+    use RCM_variables, ONLY: iSize, jSize, colat, aloct, Ri, nProc
     use RCM_io, ONLY: read_grid
 
     character (len=*), parameter :: NameSub='IM_set_grid'

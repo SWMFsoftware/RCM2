@@ -43,12 +43,9 @@ RCMOBJECTS = \
   rcm_variables.o \
   rcm_io.o \
   rcm_routines.o \
-  rcm_comput.o \
-  gmresm.o \
+  rcm_gmresm.o \
   rcm_efield.o\
-  impl_bicgstab.o \
-  gamma.o\
-  RCM_advec.o
+  rcm_advection.o
 
 OBJECTS = $(CLAWOBJECTS) $(RCMOBJECTS) $(RCMLIBRARY)
 
