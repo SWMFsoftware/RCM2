@@ -424,13 +424,13 @@ contains
   end subroutine IM_put_from_ie_mpi
 
   !============================================================================
-  subroutine IM_put_from_gm_crcm(Integral_IIV, Kp, &
+  subroutine IM_put_from_gm_crcm(Integral_IIV, Kp, Ae,&
        iSizeIn, jSizeIn, nIntegralIn, &
        BufferLine_VI, nVarLine, nPointLine, NameVar, SolarWind_V, tSimulation)
 
     integer, intent(in) :: iSizeIn, jSizeIn, nIntegralIn
     real,    intent(in) :: Integral_IIV(iSizeIn,jSizeIn,nIntegralIn)
-    real,    intent(in) :: Kp
+    real,    intent(in) :: Kp,Ae
     integer, intent(in) :: nVarLine, nPointLine
     real,    intent(in) :: BufferLine_VI(nVarLine, nPointLine)
     real,    intent(in) :: SolarWind_V(8)
