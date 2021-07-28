@@ -160,10 +160,11 @@ contains
 
     interface
        subroutine matvec(a,b,n)
+         use RCM_variables, ONLY: rprec
          ! Calculate b = M.a where M is the matrix
          integer, intent(in) :: n
-         real, intent(in) ::  a(n)
-         real, intent(out) :: b(n)
+         real(rprec), intent(in) ::  a(n)
+         real(rprec), intent(out) :: b(n)
        end subroutine matvec
     end interface
     !        subroutine for matrix vector multiplication
@@ -171,14 +172,14 @@ contains
     integer, intent(in) :: n
     !        on input:  number of unknowns
 
-    real, intent(inout) :: rhs(n)
+    real(rprec), intent(inout) :: rhs(n)
     !        on input:  right-hand side vector.
     !        on output: residual vector.
 
-    real, intent(out):: qx(n)
+    real(rprec), intent(out):: qx(n)
     !       on output: solution vector.
 
-    real, intent(inout) :: tol
+    real(rprec), intent(inout) :: tol
     !       on input:  required (relative) 2-norm or maximum norm of residual
     !       on output: achieved (relative) 2-norm or maximum norm of residual
 
@@ -220,16 +221,16 @@ contains
     ! Local variables (only 4 big vectors are needed):
 
 !!! Automatic arrays !!!
-    real, dimension(n):: bicg_r, bicg_u, bicg_r1, bicg_u1
+    real(rprec), dimension(n):: bicg_r, bicg_u, bicg_r1, bicg_u1
 
-    real :: rwork(2,7)
+    real(rprec) :: rwork(2,7)
 
     logical GoOn, rcmp, xpdt
     integer nmv
-    real alpha, beta, omega, rho0, rho1, sigma
-    real varrho, hatgamma
-    real assumedzero, rnrm0, rnrm, rnrmMax0, rnrmMax
-    real mxnrmx, mxnrmr, kappa0, kappal
+    real(rprec) alpha, beta, omega, rho0, rho1, sigma
+    real(rprec) varrho, hatgamma
+    real(rprec) assumedzero, rnrm0, rnrm, rnrmMax0, rnrmMax
+    real(rprec) mxnrmx, mxnrmr, kappa0, kappal
 
     logical :: oktest=.true.
 
@@ -453,13 +454,13 @@ contains
   contains
 
     !============================================================================
-    real function maxval_abs_mpi(a,n)
+    real(rprec) function maxval_abs_mpi(a,n)
 
       integer, intent(in) :: n
-      real, intent(in)    :: a(n)
+      real(rprec), intent(in)    :: a(n)
 
       integer :: ira
-      real :: local_max_abs, global_max_abs
+      real(rprec) :: local_max_abs, global_max_abs
       !--------------------------------------------------------------------------
 
       local_max_abs = maxval(abs(a))
@@ -472,13 +473,13 @@ contains
     end function maxval_abs_mpi
 
     !============================================================================
-    real function dot_product_mpi(a,b,n)
+    real(rprec) function dot_product_mpi(a,b,n)
 
       integer, intent(in) :: n
-      real, intent(in)    :: a(n), b(n)
+      real(rprec), intent(in)    :: a(n), b(n)
 
       integer :: ira
-      real :: local_dot_product, global_dot_product
+      real(rprec) :: local_dot_product, global_dot_product
       !--------------------------------------------------------------------------
 
       local_dot_product = sum(a*b)

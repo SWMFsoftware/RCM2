@@ -32,8 +32,8 @@ contains
   end subroutine rcm_getSize
   !===========================================================================
   subroutine rcm_getLatLon(RCM_lat,RCM_lon)
-    real, intent(inout), dimension(isize) :: RCM_lat
-    real, intent(inout), dimension(jsize) :: RCM_lon
+    real(rprec), intent(inout), dimension(isize) :: RCM_lat
+    real(rprec), intent(inout), dimension(jsize) :: RCM_lon
 
     RCM_lat = (pi/2.-colat(1:isize,1))*(180./pi)
     RCM_lon = (      aloct(1,1:jsize))*(180./pi)
@@ -41,7 +41,7 @@ contains
   !===========================================================================
   subroutine rcm_getpressure(RCM_p)
 
-    real, intent(inout), dimension(isize,jsize) :: RCM_p
+    real(rprec), intent(inout), dimension(isize,jsize) :: RCM_p
 
     integer :: i,j,k
 
@@ -61,7 +61,7 @@ contains
   !===========================================================================
   subroutine rcm_getfieldvolume(RCM_vol,RCM_x,RCM_y)
     
-    real, intent(inout), dimension(isize,jsize) :: RCM_vol,RCM_x,RCM_y
+    real(rprec), intent(inout), dimension(isize,jsize) :: RCM_vol,RCM_x,RCM_y
 
     integer :: i,j,k
 
@@ -74,7 +74,7 @@ contains
   subroutine rcm_putfieldvolume(MHD_vol, iopt, MHD_xmin, MHD_ymin, MHD_bmin)
 
     integer, intent(in) :: iopt
-    real, intent(in), dimension(isize,jsize) :: &
+    real(rprec), intent(in), dimension(isize,jsize) :: &
          MHD_vol, MHD_xmin, MHD_ymin, MHD_bmin
 
     vm(1:isize,1:jsize) = MHD_vol
@@ -92,7 +92,7 @@ contains
   !===========================================================================
   subroutine rcm_putrhop(MHD_rho,MHD_p)
 
-    real, intent(in), dimension(isize,jsize) :: MHD_rho,MHD_p
+    real(rprec), intent(in), dimension(isize,jsize) :: MHD_rho,MHD_p
 
     integer :: i,j
     density (1:isize,1:jsize) = MHD_rho /xmass(2)/1.0E+6 ! in cm-3
@@ -113,7 +113,7 @@ contains
   !===========================================================================
   subroutine rcm_putpotential(MHD_v)
 
-    real, intent(in), dimension(isize,jsize) :: MHD_v
+    real(rprec), intent(in), dimension(isize,jsize) :: MHD_v
 
     v(1:isize,1:jsize) = MHD_v
     CALL Wrap_around_ghostcells (v,isize,jsize,n_gc)
@@ -122,7 +122,7 @@ contains
   !===========================================================================
   subroutine rcm_putbirk(MHD_birk)
 
-    real, intent(in), dimension(isize,jsize) :: MHD_birk
+    real(rprec), intent(in), dimension(isize,jsize) :: MHD_birk
 
     birk_mhd(1:isize,1:jsize) = MHD_birk
     CALL Wrap_around_ghostcells (birk_mhd,isize,jsize,n_gc)
@@ -136,7 +136,7 @@ contains
     ! by summing up distribution functions for all species.
     ! Values outside the modeling region are set to -1.0
     
-    real, intent (out) :: RCM_mass_density (isize,jsize)
+    real(rprec), intent (out) :: RCM_mass_density (isize,jsize)
 
     integer :: i,j,k
 
@@ -167,8 +167,8 @@ contains
     use ModMpiOrig
 
     integer :: time_i, time_f, idt2, rec_i, rec_f, istep, time_i_overall, time_f_overall
-    REAL, dimension (isize,jsize) :: MHD_rho, MHD_p, MHD_vol, MHD_xmin, MHD_ymin, MHD_Bmin, MHD_v
-    REAL, dimension (1-n_gc:isize+n_gc,1-n_gc:jsize+n_gc) :: vm_tmp, xmin_tmp, ymin_tmp
+    REAL(RPREC), dimension (isize,jsize) :: MHD_rho, MHD_p, MHD_vol, MHD_xmin, MHD_ymin, MHD_Bmin, MHD_v
+    REAL(RPREC), dimension (1-n_gc:isize+n_gc,1-n_gc:jsize+n_gc) :: vm_tmp, xmin_tmp, ymin_tmp
 
     ! Get magnetic field for RCM (constant):
     CALL Read_array('rcmvm_inp', 1, label, ARRAY_2D=vm_tmp, ASCI=asci_flag)
@@ -1454,10 +1454,10 @@ contains
 
     ! Internal Vars:
     integer            :: iLoc, jLoc, IntTemp(1), k
-    real               :: xnorm, ynorm, diff_colat(isize), diff_aloct(jsize)
-    real               :: wrapped_colat(0:isize+1), wrapped_aloct(0:jsize+1)
+    real(rprec)               :: xnorm, ynorm, diff_colat(isize), diff_aloct(jsize)
+    real(rprec)               :: wrapped_colat(0:isize+1), wrapped_aloct(0:jsize+1)
     character(len=100) :: StringTime
-    real               :: Volume
+    real(rprec)               :: Volume
     !-------------------------------------------------------------------------
     HeadVar_I = -1.0
     DistVar_II= -1.0
@@ -1556,16 +1556,16 @@ contains
   end subroutine set_satvar
 
   !============================================================================
-  real function IM_bilinear(A_II, iMin, iMax, jMin, jMax, Xy_D)
+  real(rprec) function IM_bilinear(A_II, iMin, iMax, jMin, jMax, Xy_D)
 
     ! Calculate bilinear interpolation of A_II at position Xy_D
 
     integer, intent(in) :: iMin, iMax, jMin, jMax
-    real, intent(in)    :: A_II(iMin:iMax,jMin:jMax)
-    real, intent(in)    :: Xy_D(2)
+    real(rprec), intent(in)    :: A_II(iMin:iMax,jMin:jMax)
+    real(rprec), intent(in)    :: Xy_D(2)
 
     integer :: i1, i2, j1, j2
-    real :: Dx1, Dx2, Dy1, Dy2
+    real(rprec) :: Dx1, Dx2, Dy1, Dy2
     character (len=*), parameter :: NameSub='IM_bilinear'
     !--------------------------------------------------------------------------
     !Set location assuming point is inside block.
@@ -1597,7 +1597,7 @@ contains
   subroutine RCM_compute_plasma_moments ()
 
     INTEGER (iprec) :: i, j, k, ie, kk
-    REAL (rprec) :: co1, co2, co3, co4
+    REAL(rprec) :: co1, co2, co3, co4
     !------------------------------------------------------------------------
     RCM_dens_prg = 0.0
     RCM_dens_cm3 = 0.0

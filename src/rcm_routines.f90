@@ -84,7 +84,7 @@ contains
        !      2. Differentiate it with respect to I and J:
 
        CALL Deriv_i (veff, isize, jsize, imin_j, dvefdi)
-       CALL Deriv_j (veff, isize, jsize, imin_j, 1.0e+25, dvefdj)
+       CALL Deriv_j (veff, isize, jsize, imin_j, 1.0d+25, dvefdj)
        WHERE (ABS(dvefdj) > 1.0E+24)
           dvefdi = 0.0
           dvefdj = 0.0
@@ -511,7 +511,7 @@ contains
        ! (only inside the modeling region, boundaries possibly included).
        !
        CALL Deriv_i (veff, isize, jsize, imin_j, dvefdi)
-       CALL Deriv_j (veff, isize, jsize, imin_j, 1.0E+25, dvefdj)
+       CALL Deriv_j (veff, isize, jsize, imin_j, 1.0D+25, dvefdj)
        WHERE (ABS(dvefdj) > 1.0E+24) 
           dvefdj = 0.0_rprec
           dvefdi = 0.0_rprec
@@ -788,7 +788,7 @@ contains
        !
        DO j = 1, jsize
           DO i = 1, isize
-             IF (REAL(i,rprec) < Bndy(bndloc, jsize, REAL(j)) ) CYCLE
+             IF (REAL(i,rprec) < Bndy(bndloc, jsize, REAL(j,rprec)) ) CYCLE
              DO kc = kcbeg, kcend
                 q = alamc(kc) / charge
                 IF (q > 0.0_rprec) THEN
@@ -3064,7 +3064,7 @@ contains
        !    2. Differentiate Veff with respect to I and J:
        !
        CALL Deriv_i (veff, isize, jsize, imin_j, dvefdi)
-       CALL Deriv_j (veff, isize, jsize, imin_j, 1.0E+32, dvefdj)
+       CALL Deriv_j (veff, isize, jsize, imin_j, 1.0D+32, dvefdj)
 
 
        WHERE (ABS(dvefdj) > 1.0E+30)
@@ -3216,8 +3216,8 @@ contains
     !
     FUNCTION Ratefn (fudgx, alamx, sinix, birx, vmx, xmfact)
 
-      REAL, INTENT (IN) :: fudgx,alamx,sinix,birx,vmx,xmfact
-      REAL             :: Ratefn
+      REAL (rprec), INTENT (IN) :: fudgx,alamx,sinix,birx,vmx,xmfact
+      REAL (rprec)            :: Ratefn
       !
       !   Function subprogram to compute precipitation rate
       !   Last update:  04-04-88
@@ -3243,9 +3243,9 @@ contains
     !-------------------------------------------------------------------------
     !
 
-    real, intent(in):: kp, f107
-    real, intent(out):: fracH, fracHe, fracO
-    real:: ratOH, ratHeH
+    real(rprec), intent(in):: kp, f107
+    real(rprec), intent(out):: fracH, fracHe, fracO
+    real(rprec):: ratOH, ratHeH
 
 
 
@@ -4133,7 +4133,7 @@ contains
     !--------------------------------------------------------------------------
     !
     INTEGER, PARAMETER ::irsiz=18,inrgsz=13,isolsz=2,ionsiz=2
-    REAL ::  elgvec(inrgsz), rvec(irsiz),ssnvec(2), &
+    REAL(rprec) ::  elgvec(inrgsz), rvec(irsiz),ssnvec(2), &
          enrglg, br, bnrg, ssnuse, bssn, decayt
     INTEGER :: ispndx, ir, inrg
     !
@@ -4217,8 +4217,8 @@ contains
   FUNCTION G3ntrp (a,imax,jmax,kmax,bi,bj,bk)
 
     INTEGER, INTENT (IN) :: imax, jmax, kmax
-    REAL, INTENT (IN) :: a(imax,jmax,kmax), bi, bj, bk
-    REAL :: G3ntrp
+    REAL(rprec), INTENT (IN) :: a(imax,jmax,kmax), bi, bj, bk
+    REAL(rprec) :: G3ntrp
     !
     !--------------------------------------------------------------------------
     !  copyright Rice University, 1993
@@ -4246,7 +4246,7 @@ contains
     !
     !
     INTEGER ::  ndx(3),ndim(3), kstop, jstop, L, i, j, k
-    REAL ::  BV(3),COEF(3,2), fndx
+    REAL(rprec) ::  BV(3),COEF(3,2), fndx
     !
     NDIM(1)=IMAX
     NDIM(2)=JMAX
@@ -4660,7 +4660,7 @@ contains
              c   = 0.5 * (a+b)
              !              IF ( ABS ( Fequat_of_x (c, REAL(j,rprec)) ) < 100*EPSILON(1.0_rprec)) EXIT
              !              IF (       Fequat_of_x (c, REAL(j,rprec)) < 0.0_rprec) THEN
-             IF (       Fequat_of_x (c, REAL(j)) < 0.0_rprec) THEN
+             IF (Fequat_of_x (c, REAL(j,rprec)) < 0.0_rprec) THEN
                 b = c
              ELSE
                 a = c
@@ -4742,7 +4742,7 @@ contains
              c   = 0.5 * (a+b)
              !              IF ( ABS ( Fequat_of_x (c, REAL(j,rprec)) ) < 100*EPSILON(1.0_rprec)) EXIT
              !              IF (       Fequat_of_x (c, REAL(j,rprec)) < 0.0_rprec) THEN
-             IF (       Fequat_of_x (c, REAL(j)) < 0.0_rprec) THEN
+             IF (       Fequat_of_x (c, REAL(j,rprec)) < 0.0_rprec) THEN
                 b = c
              ELSE
                 a = c
@@ -4773,7 +4773,7 @@ contains
              c   = 0.5 * (a+b)
              !              IF ( ABS ( Fequat_of_x (c, REAL(j,rprec)) ) < 100*EPSILON(1.0_rprec)) EXIT
              !              IF (       Fequat_of_x (c, REAL(j,rprec)) < 0.0_rprec) THEN
-             IF (       Fequat_of_x (c, REAL(j)) < 0.0_rprec) THEN
+             IF (       Fequat_of_x (c, REAL(j, rprec)) < 0.0_rprec) THEN
                 b = c
              ELSE
                 a = c
@@ -5135,7 +5135,7 @@ contains
     !     Compute J_parallel due to continuous channel:
     !                                                                       
     CALL Deriv_i (vm, isize, jsize, imin_j, dvmdi)
-    CALL Deriv_j (vm, isize, jsize, imin_j, 1.0E+25, dvmdj)
+    CALL Deriv_j (vm, isize, jsize, imin_j, 1.0D+25, dvmdj)
     WHERE (ABS(dvmdj) > 1.0E+24)  ! to prevent artificial inflows on bndy
        dvmdi = 0.0_rprec
        dvmdj = 0.0_rprec
@@ -5144,7 +5144,7 @@ contains
     DO kc = 1, kcsize
        !
        CALL Deriv_i (eeta (:,:,kc), isize, jsize, imin_j, detadi)
-       CALL Deriv_j (eeta (:,:,kc), isize, jsize, imin_j, 1.0E+32, detadj)
+       CALL Deriv_j (eeta (:,:,kc), isize, jsize, imin_j, 1.0D+32, detadj)
        WHERE (ABS(detadj) > 1.0E+31)
           detadi = 0.0
           detadj = 0.0
