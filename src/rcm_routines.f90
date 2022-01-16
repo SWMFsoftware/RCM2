@@ -1,6 +1,7 @@
 module RCM_routines
 
   use RCM_variables
+  use ModUtilities, ONLY: CON_stop, CON_set_do_test
   
   implicit none
 

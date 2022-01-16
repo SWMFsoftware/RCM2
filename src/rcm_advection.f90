@@ -2,6 +2,8 @@ module RCM_advection
 
   ! Routines for interfacing with MHD
 
+  use ModUtilities, ONLY: CON_stop
+  
   use RCM_variables
 
   use RCM_routines, ONLY: &

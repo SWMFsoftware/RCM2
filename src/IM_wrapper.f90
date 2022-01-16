@@ -6,6 +6,7 @@ module IM_wrapper
 
   ! Wrapper for RCM Internal Magnetosphere (IM) component
 
+  use ModUtilities, ONLY: CON_set_do_test, CON_stop
   use RCM_advection, ONLY: RCM_advec
   use RCM_routines, ONLY: wrap_around_ghostcells
   

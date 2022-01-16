@@ -1,5 +1,7 @@
 module RCM_gmresm
 
+  use ModUtilities, ONLY: CON_stop
+
   implicit none
 
 contains

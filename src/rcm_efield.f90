@@ -1,5 +1,6 @@
 module RCM_efield
 
+  use ModUtilities, ONLY: CON_stop
   use RCM_variables
   use RCM_routines
   use RCM_gmresm, ONLY: define_pde_matrix, gmresm, gmresm_matvec, &

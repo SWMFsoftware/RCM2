@@ -1,6 +1,8 @@
 module RCM_io
   
+  use ModUtilities, ONLY: CON_stop
   use Rcm_variables
+
   implicit none
 
   INTERFACE Read_array
