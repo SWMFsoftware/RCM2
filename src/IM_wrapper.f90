@@ -9,7 +9,7 @@ module IM_wrapper
   use ModUtilities, ONLY: CON_set_do_test, CON_stop
   use RCM_advection, ONLY: RCM_advec
   use RCM_routines, ONLY: wrap_around_ghostcells
-  
+
   implicit none
 
   private ! except
@@ -150,7 +150,7 @@ contains
           case("#COMPOSITION")
              call read_var('NameCompModel', NameCompModel, IsUpperCase=.true.)
              select case(NameCompModel)
-                case('FIXED')
+             case('FIXED')
                 call read_var('FractionH', x_h)
                 call read_var('FractionO', x_o)
              case('YOUNG')
@@ -534,32 +534,35 @@ contains
     real, dimension(iSizeIn,jSizeIn,nVarIn), intent(in) :: Buffer_IIV
     character (len=*),intent(in)       :: NameVar
 
-    integer, parameter :: vol_=1, z0x_=2, z0y_=3, bmin_=4, rho_=5, p_=6, &
-         HpRho_=5, HpP_=6, OpRho_=7, OpP_=8
+    integer, parameter :: vol_=1, z0x_=2, z0y_=3, bmin_=4, rho_=5, &
+         p_=6, HpRho_=5, HpP_=6, OpRho_=7, OpP_=8
+    integer :: pe_ = -1 
     logical :: DoTest, DoTestMe
     !--------------------------------------------------------------------------
     call CON_set_do_test(NameSub, DoTest, DoTestMe)
 
-    DoMultiFluidGMCoupling = nVarIn > 6
+    DoMultiFluidGMCoupling = nVarIn > 7
     if(DoTest)write(*,*)NameSub,' starting with NameVar=',NameVar
     if(DoTest) call write_data
 
     if(.not. DoMultiFluidGMCoupling)then
-       if(NameVar /= 'vol:z0x:z0y:bmin:rho:p') &
+       if(NameVar /= 'vol:z0x:z0y:bmin:rho:p:pe') &
             call CON_stop(NameSub//' invalid NameVar='//NameVar)
+       pe_ = 7
     else
-       if(NameVar /= 'vol:z0x:z0y:bmin:Hprho:Oprho:Hpp:Opp') &
+       if(NameVar /= 'vol:z0x:z0y:bmin:Hprho:Oprho:Hpp:Opp:pe') &
             call CON_stop(NameSub//' invalid NameVar='//NameVar)
+       pe_ = 9
     end if
 
     DoneGmCoupling = .true.
     if(.not. DoMultiFluidGMCoupling)then
-       if(iSizeIn /= iSize .or. jSizeIn /= jSize .or. nVarIn /= p_)then
+       if(iSizeIn /= iSize .or. jSizeIn /= jSize .or. nVarIn /= pe_)then
           write(*,*)NameSub//' incorrect buffer size=',iSizeIn,jSizeIn,nVarIn
           call CON_stop(NameSub//' SWMF_ERROR')
        end if
     else
-       if(iSizeIn /= iSize .or. jSizeIn /= jSize .or. nVarIn /= OpP_)then
+       if(iSizeIn /= iSize .or. jSizeIn /= jSize .or. nVarIn /= pe_)then
           write(*,*)NameSub//' incorrect buffer size=',iSizeIn,jSizeIn,nVarIn
           call CON_stop(NameSub//' SWMF_ERROR')
        end if
@@ -588,6 +591,7 @@ contains
             Buffer_IIV(:,:,OpRho_)/xmass(3)/1.0E+6 ! in cm-3       
        pressureHp(1:isize,1:jsize)= Buffer_IIV(:,:,HpP_)
        pressureOp(1:isize,1:jsize)= Buffer_IIV(:,:,OpP_)
+       pressurePe(1:isize,1:jsize)= Buffer_IIV(:,:,pe_)
 
        where(Buffer_IIV(:,:,Hprho_) /= 0.0)
           temperatureHp (1:iSize,1:jSize) = &
@@ -614,28 +618,40 @@ contains
        pressure(1:isize,1:jsize) = pressureHp(1:isize,1:jsize) + pressureOp(1:isize,1:jsize)
        where(Buffer_IIV(:,:,rho_) /= 0.0)
           temperature(1:isize,1:jsize) = &
-                (Buffer_IIV(:,:,Hpp_)+Buffer_IIV(:,:,Opp_)) &
-                /((Buffer_IIV(:,:,Hprho_) + Buffer_IIV(:,:,Oprho_))/xmass(2))/1.6E-19
+               (Buffer_IIV(:,:,Hpp_)+Buffer_IIV(:,:,Opp_)) &
+               /((Buffer_IIV(:,:,Hprho_) + Buffer_IIV(:,:,Oprho_))/xmass(2))/1.6E-19
+          ! partition the electron energy
+          temperatureTe(1:isize,1:jsize) = &
+               Buffer_IIV(:,:,pe_) &
+               /((Buffer_IIV(:,:,HpRho_) + Buffer_IIV(:,:,OpRho_))/xmass(1))/1.6E-19
        elsewhere
           temperature(1:iSize,1:jSize) =5000.0
+          temperatureTe(1:isize,1:jsize) = temperature(1:iSize,1:jSize) * (xmass(2)*x_h + xmass(3)*x_o) &
+               / xmass(2) / (1.0 + 1.0 / 7.8) / 7.8
        end where
     else
        density(1:isize,1:jsize) = Buffer_IIV(:,:,rho_)/xmass(2)/1.0E+6 ! in cm-3
+       pressurePe(1:isize,1:jsize)= Buffer_IIV(:,:,pe_)
        pressure(1:isize,1:jsize) = Buffer_IIV(:,:,p_)
        where(Buffer_IIV(:,:,rho_) /= 0.0) 
           temperature(1:iSize,1:jSize) = &
                Buffer_IIV(:,:,p_)/(Buffer_IIV(:,:,rho_)/xmass(2))/1.6E-19 ! in K
+          temperatureTe(1:iSize,1:jSize) = &
+               Buffer_IIV(:,:,pe_)/(Buffer_IIV(:,:,rho_)/xmass(1))/1.6E-19 ! in K
        elsewhere
           temperature(1:iSize,1:jSize) =5000.0
+          temperatureTe(1:iSize,1:jSize) =temperature(1:iSize,1:jSize) * (xmass(2)*x_h + xmass(3)*x_o) &
+               / xmass(2) / (1.0 + 1.0 / 7.8) / 7.8
        end where
+       call wrap_around_ghostcells(density, isize, jsize, n_gc)
+       call wrap_around_ghostcells(temperature, isize, jsize, n_gc)
     endif
 
-    call wrap_around_ghostcells(density, isize, jsize, n_gc)
-    call wrap_around_ghostcells(temperature, isize, jsize, n_gc)
+    call wrap_around_ghostcells(temperatureTe, isize, jsize, n_gc)
 
     ! Save Kp if Buffer has non-negative value:
     kpYoung = max(0.0,BufferKp)
-    
+
   contains
 
     !==========================================================================
@@ -749,12 +765,13 @@ contains
     !LOCAL VARIABLES:
     real :: tSimulation
     integer :: iTimeStart
-    integer, parameter :: pres_=1, dens_=2, Hpres_=3,Opres_=4,Hdens_=5,Odens_=6
+    integer, parameter :: pe_=1, pres_=2, dens_=3, &
+         Hpres_=4,Opres_=5,Hdens_=6,Odens_=7
 
     integer :: i,j,k
     logical :: DoTest, DoTestMe
     !--------------------------------------------------------------------------
-    if(nVar > 2)DoMultiFluidGMCoupling = .true.
+    if(nVar > 3)DoMultiFluidGMCoupling = .true.
 
     call CON_set_do_test(NameSub, DoTest, DoTestMe)
     if (DoTestMe) &
@@ -762,10 +779,10 @@ contains
          iSizeIn,jSizeIn,nVar,NameVar
 
     if(DoMultiFluidGMCoupling)then
-       if(NameVar /= 'p:rho:Hpp:Opp:Hprho:Oprho') &
+       if(NameVar /= 'pe:p:rho:Hpp:Opp:Hprho:Oprho') &
             call CON_stop(NameSub//' invalid NameVar='//NameVar)
     else
-       if(NameVar /= 'p:rho') &
+       if(NameVar /= 'pe:p:rho') &
             call CON_stop(NameSub//' invalid NameVar='//NameVar)
     endif
 
@@ -788,13 +805,21 @@ contains
 
     Buffer_IIV = 0.
 
-    !Fill pressure and density
+    !Fill pressure and densityå
     do i=1,iSize; do j=1,jSize
        if( i<imin_j(j) .or. vm(i,j) <= 0.0 ) then
+          Buffer_IIV(i,j,pe_) = -1.
           Buffer_IIV(i,j,pres_) = -1.
           Buffer_IIV(i,j,dens_) = -1.
        else
-          do k=1,kcsize
+          do k = 1, kmax(1) ! electron 
+             Buffer_IIV(i,j,pe_) = Buffer_IIV(i,j,pe_) + &
+                  vm(i,j)**2.5*eeta(i,j,k)*ABS(alamc(k))
+!!!! temporarily add electron density to ion density for testing     
+             Buffer_IIV(i,j,dens_) = Buffer_IIV(i,j,dens_) + &
+                  eeta(i,j,k)*vm(i,j)**1.5 * xmass(ikflavc(k))
+          end do
+          do k = kmin(2), kmax(3) ! ion from channel 31 to kcsize=200
              Buffer_IIV(i,j,pres_) = Buffer_IIV(i,j,pres_) + &
                   vm(i,j)**2.5*eeta(i,j,k)*ABS(alamc(k))
              Buffer_IIV(i,j,dens_) = Buffer_IIV(i,j,dens_) + &
@@ -804,18 +829,23 @@ contains
        if(DoMultiFluidGMCoupling)then
           !  Multifluid case
           if( i<imin_j(j) .or. vm(i,j) <= 0.0 ) then
+             Buffer_IIV(i,j,pe_) = -1.
              Buffer_IIV(i,j,Hpres_) = -1.
              Buffer_IIV(i,j,Opres_) = -1.
              Buffer_IIV(i,j,Hdens_) = -1.
              Buffer_IIV(i,j,Odens_) = -1.
           else
-             do k=kmin(2),kmax(2)
+             do k = kmin(1), kmax(1) ! electron 
+                Buffer_IIV(i,j,pe_) = Buffer_IIV(i,j,pe_) + &
+                     vm(i,j)**2.5*eeta(i,j,k)*ABS(alamc(k))
+             end do
+             do k=kmin(2),kmax(2) ! H+
                 Buffer_IIV(i,j,Hpres_) = Buffer_IIV(i,j,Hpres_) + &
                      vm(i,j)**2.5*eeta(i,j,k)*ABS(alamc(k))
                 Buffer_IIV(i,j,Hdens_) = Buffer_IIV(i,j,Hdens_) + &
                      eeta(i,j,k)*vm(i,j)**1.5 * xmass(ikflavc(k))
              end do
-             do k=kmin(3),kmax(3)
+             do k=kmin(3),kmax(3) ! O+
                 Buffer_IIV(i,j,Opres_) = Buffer_IIV(i,j,Opres_) + &
                      vm(i,j)**2.5*eeta(i,j,k)*ABS(alamc(k))
                 Buffer_IIV(i,j,Odens_) = Buffer_IIV(i,j,Odens_) + &
@@ -908,7 +938,8 @@ contains
 
     where(Buffer_IIV(:,:,pres_) > 0.0) &
          Buffer_IIV(:,:,pres_) = Buffer_IIV(:,:,pres_) * 1.67E-35
-
+    where(Buffer_IIV(:,:,pe_) > 0.0) &
+         Buffer_IIV(:,:,pe_) = Buffer_IIV(:,:,pe_) * 1.67E-35
     ! Units of rcm_mass_density are kg/m3
     where(Buffer_IIV(:,:,dens_) > 0.0) &
          Buffer_IIV(:,:,dens_) = Buffer_IIV(:,:,dens_) / 6.37E+15
@@ -1044,7 +1075,7 @@ end module IM_wrapper
 subroutine IM_write_prefix
 
   use RCM_variables, ONLY: iUnitOut, STDOUT_, StringPrefix
-  
+
   implicit none
 
   if(iUnitOut==STDOUT_)write(*,'(a)',ADVANCE='NO')trim(StringPrefix)

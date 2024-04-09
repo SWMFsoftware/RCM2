@@ -143,8 +143,10 @@ module Rcm_variables
        densityOp   (1-n_gc:isize+n_gc, 1-n_gc:jsize+n_gc), &
        pressureHp  (1-n_gc:isize+n_gc, 1-n_gc:jsize+n_gc), &
        pressureOp  (1-n_gc:isize+n_gc, 1-n_gc:jsize+n_gc), &
+       pressurePe  (1-n_gc:isize+n_gc, 1-n_gc:jsize+n_gc), &
        temperatureHp(1-n_gc:isize+n_gc, 1-n_gc:jsize+n_gc), &
-       temperatureOp(1-n_gc:isize+n_gc, 1-n_gc:jsize+n_gc)
+       temperatureOp(1-n_gc:isize+n_gc, 1-n_gc:jsize+n_gc), &
+       temperatureTe(1-n_gc:isize+n_gc, 1-n_gc:jsize+n_gc)
 
 
   ! SWMF: allocatable array (1-n_gc:isize+n_gc,1-n_gc:jsize+n_gc,kcsize)
