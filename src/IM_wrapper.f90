@@ -623,10 +623,10 @@ contains
           ! partition the electron energy
           temperatureTe(1:isize,1:jsize) = &
                Buffer_IIV(:,:,pe_) &
-               /((Buffer_IIV(:,:,HpRho_) + Buffer_IIV(:,:,OpRho_))/xmass(1))/1.6E-19
+               /((Buffer_IIV(:,:,HpRho_) + Buffer_IIV(:,:,OpRho_))/xmass(2))/1.6E-19
        elsewhere
-          temperature(1:iSize,1:jSize) =5000.0
-          temperatureTe(1:isize,1:jsize) = temperature(1:iSize,1:jSize) &
+          temperature(1:iSize,1:jSize)   = 5000.0
+          temperatureTe(1:isize,1:jsize) = 5000.0 &
                *(xmass(2)*x_h + xmass(3)*x_o)/xmass(2)/(1 + 1/7.8)/7.8
        end where
     else
@@ -637,7 +637,7 @@ contains
           temperature(1:iSize,1:jSize) = &
                Buffer_IIV(:,:,p_)/(Buffer_IIV(:,:,rho_)/xmass(2))/1.6E-19 ! in K
           temperatureTe(1:iSize,1:jSize) = &
-               Buffer_IIV(:,:,pe_)/(Buffer_IIV(:,:,rho_)/xmass(1))/1.6E-19 ! in K
+               Buffer_IIV(:,:,pe_)/(Buffer_IIV(:,:,rho_)/xmass(2))/1.6E-19 ! in K
        elsewhere
           temperature(1:iSize,1:jSize)  =5000.0
           temperatureTe(1:iSize,1:jSize)=temperature(1:iSize,1:jSize)/7.8
