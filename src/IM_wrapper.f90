@@ -626,8 +626,8 @@ contains
                /((Buffer_IIV(:,:,HpRho_) + Buffer_IIV(:,:,OpRho_))/xmass(1))/1.6E-19
        elsewhere
           temperature(1:iSize,1:jSize) =5000.0
-          temperatureTe(1:isize,1:jsize) = temperature(1:iSize,1:jSize) * (xmass(2)*x_h + xmass(3)*x_o) &
-               / xmass(2) / (1.0 + 1.0 / 7.8) / 7.8
+          temperatureTe(1:isize,1:jsize) = temperature(1:iSize,1:jSize) &
+               *(xmass(2)*x_h + xmass(3)*x_o)/xmass(2)/(1 + 1/7.8)/7.8
        end where
     else
        density(1:isize,1:jsize) = Buffer_IIV(:,:,rho_)/xmass(2)/1.0E+6 ! in cm-3
@@ -639,9 +639,8 @@ contains
           temperatureTe(1:iSize,1:jSize) = &
                Buffer_IIV(:,:,pe_)/(Buffer_IIV(:,:,rho_)/xmass(1))/1.6E-19 ! in K
        elsewhere
-          temperature(1:iSize,1:jSize) =5000.0
-          temperatureTe(1:iSize,1:jSize) =temperature(1:iSize,1:jSize) * (xmass(2)*x_h + xmass(3)*x_o) &
-               / xmass(2) / (1.0 + 1.0 / 7.8) / 7.8
+          temperature(1:iSize,1:jSize)  =5000.0
+          temperatureTe(1:iSize,1:jSize)=temperature(1:iSize,1:jSize)/7.8
        end where
        call wrap_around_ghostcells(density, isize, jsize, n_gc)
        call wrap_around_ghostcells(temperature, isize, jsize, n_gc)
