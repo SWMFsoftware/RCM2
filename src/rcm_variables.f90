@@ -146,7 +146,8 @@ module Rcm_variables
        pressurePe  (1-n_gc:isize+n_gc, 1-n_gc:jsize+n_gc), &
        temperatureHp(1-n_gc:isize+n_gc, 1-n_gc:jsize+n_gc), &
        temperatureOp(1-n_gc:isize+n_gc, 1-n_gc:jsize+n_gc), &
-       temperatureTe(1-n_gc:isize+n_gc, 1-n_gc:jsize+n_gc)
+       temperatureTe(1-n_gc:isize+n_gc, 1-n_gc:jsize+n_gc), &
+       temperature_mhd (1-n_gc:isize+n_gc, 1-n_gc:jsize+n_gc)
 
 
   ! SWMF: allocatable array (1-n_gc:isize+n_gc,1-n_gc:jsize+n_gc,kcsize)

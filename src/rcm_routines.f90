@@ -3348,10 +3348,8 @@ contains
                   xmass(2) * x_o / (xmass(2)*x_h+xmass(3)*x_o)
              n_species (i,j,1) = n_species(i,j,2) + n_species(i,j,3)
 
-             temp_species (i,j,2) = temperature (i,j) * &
-                  (xmass(2)*x_h+xmass(3)*x_o) / xmass(2) / &
-                  (1.0+1.0/7.8)
-             temp_species (i,j,3) = temp_species (i,j,2)
+             temp_species (i,j,2) = temperature (i,j)
+             temp_species (i,j,3) = temperature (i,j)
              temp_species (i,j,1) = temperatureTe (i,j)
           else
              n_species(i,j,2) = densityHp(i,j)
@@ -3367,6 +3365,9 @@ contains
        END DO
     END DO
 
+    if(.not. DoMultiFluidGMCoupling) then
+      temperature_mhd = temperature + temperatureTe
+    end if
 
     !
     !     H+
@@ -3769,13 +3770,14 @@ contains
                 density_rcm = density_rcm + (xmass(ikflavc(k))/xmass(2)) * (eeta(i,j,k)/6.37E+21) * vm(i,j)**1.5
                 pressure_rcm= pressure_rcm+ ((ABS(alamc(k))*eeta(i,j,k))*1.67E-20) * ((vm(i,j)**2.5)*1.0E-6) ! nPa
              END DO
+             pressure_rcm =  pressure_rcm * (xmass(2)*x_h+xmass(3)*x_o) / xmass(2)
 
              IF (density(i,j) /= 0.0 ) THEN
                 IF (ABS(density_rcm-density(i,j))/density(i,j) > 0.01) THEN
                    OPEN (unit=UNIT_DEBUG,FILE=trim(NameRcmDir)//'RCM_DEBUG')
                    WRITE (UNIT_DEBUG,'(/////)')
                    WRITE (UNIT_DEBUG,*) 'RCM: IN RCM_PLASMA_BC THERE IS A MISMATCH IN MASS DENSITY MOMENTS:'
-                   WRITE (UNIT_DEBUG,*) 'MHD SENT: ',' N=',density(i,j),' T=', temperature(i,j)
+                   WRITE (UNIT_DEBUG,*) 'MHD SENT: ',' N=',density(i,j),' T=', temperature_mhd(i,j)
                    WRITE (UNIT_DEBUG,*) 'RCM  HAS: ',' N=',density_rcm, ' T=', pressure_rcm/density(i,j)/1.6E-4
                    WRITE (UNIT_DEBUG,*) 'LOCATION: ','I=',i,' J=',j, ' IMIN_J(J)=',imin_j(J)
                    WRITE (UNIT_DEBUG,*) ' '
@@ -3787,14 +3789,14 @@ contains
                 END IF
              END IF
 
-             IF (temperature(i,j) /= 0.0 .and. density(i,j) /= 0.0) THEN
-                IF (ABS((temperature(i,j)-pressure_rcm/density(i,j)/1.6E-4)/temperature(i,j)) > 0.01) THEN
+             IF (temperature_mhd(i,j) /= 0.0 .and. density(i,j) /= 0.0) THEN
+                IF (ABS((temperature_mhd(i,j)-pressure_rcm/density(i,j)/1.6E-4)/temperature_mhd(i,j)) > 0.01) THEN
                    OPEN (unit=UNIT_DEBUG,FILE=trim(NameRcmDir)//'RCM_DEBUG')
                    WRITE (UNIT_DEBUG,'(/////)')
                    WRITE (UNIT_DEBUG,*) 'RCM: IN RCM_PLASMA_BC THERE IS A MISMATCH IN ENERGY DENSITY MOMENTS:'
-                   WRITE (UNIT_DEBUG,*) 'MHD SENT: ',' N=',density(i,j),' T=',temperature(i,j)
+                   WRITE (UNIT_DEBUG,*) 'MHD SENT: ',' N=',density(i,j),' T=',temperature_mhd(i,j)
                    WRITE (UNIT_DEBUG,*) 'RCM  HAS: ',' N=',density_rcm ,' T=',pressure_rcm/density(i,j)/1.6E-4
-                   WRITE (UNIT_DEBUG,*) 'P RCM vs MHD: ',  pressure_rcm, temperature(i,j)*1.6E-4*density(i,j)
+                   WRITE (UNIT_DEBUG,*) 'P RCM vs MHD: ',  pressure_rcm, temperature_mhd(i,j)*1.6E-4*density(i,j)
                    WRITE (UNIT_DEBUG,*) 'LOCATION: ','I=',i,' J=',j
                    DO k = 1, kcsize
                       WRITE (UNIT_DEBUG,*) k, alamc(k), ikflavc(k), eeta(i,j,k)

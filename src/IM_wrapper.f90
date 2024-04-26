@@ -597,8 +597,12 @@ contains
           temperatureHp (1:iSize,1:jSize) = &
                Buffer_IIV(:,:,Hpp_)/(Buffer_IIV(:,:,Hprho_)/xmass(2))/1.6E-19
           !in eV,assuming p=nkT, [p/n]=J,J/e-->eV
+          ! partition the electron energy
+          temperatureTe(1:isize,1:jsize) = &
+               Buffer_IIV(:,:,pe_)/(Buffer_IIV(:,:,Hprho_)/xmass(2))/1.6E-19
        elsewhere
           temperatureHp (1:iSize,1:jSize) =5000.0
+          temperatureTe(1:isize,1:jsize) = 5000 / 7.8
        end where
        where(Buffer_IIV(:,:,Oprho_) /= 0.0)
           ! in ev     
@@ -620,24 +624,18 @@ contains
           temperature(1:isize,1:jsize) = &
                (Buffer_IIV(:,:,Hpp_)+Buffer_IIV(:,:,Opp_)) &
                /((Buffer_IIV(:,:,Hprho_) + Buffer_IIV(:,:,Oprho_))/xmass(2))/1.6E-19
-          ! partition the electron energy
-          temperatureTe(1:isize,1:jsize) = &
-               Buffer_IIV(:,:,pe_) &
-               /((Buffer_IIV(:,:,HpRho_) + Buffer_IIV(:,:,OpRho_))/xmass(2))/1.6E-19
        elsewhere
           temperature(1:iSize,1:jSize)   = 5000.0
-          temperatureTe(1:isize,1:jsize) = 5000.0 &
-               *(xmass(2)*x_h + xmass(3)*x_o)/xmass(2)/(1 + 1/7.8)/7.8
        end where
     else
        density(1:isize,1:jsize) = Buffer_IIV(:,:,rho_)/xmass(2)/1.0E+6 ! in cm-3
        pressurePe(1:isize,1:jsize)= Buffer_IIV(:,:,pe_)
        pressure(1:isize,1:jsize) = Buffer_IIV(:,:,p_)
        where(Buffer_IIV(:,:,rho_) /= 0.0) 
-          temperature(1:iSize,1:jSize) = &
-               Buffer_IIV(:,:,p_)/(Buffer_IIV(:,:,rho_)/xmass(2))/1.6E-19 ! in K
-          temperatureTe(1:iSize,1:jSize) = &
-               Buffer_IIV(:,:,pe_)/(Buffer_IIV(:,:,rho_)/xmass(2))/1.6E-19 ! in K
+          temperature(1:iSize,1:jSize) = ((xmass(2)*x_h+xmass(3)*x_o)/xmass(2)) * &
+               Buffer_IIV(:,:,p_)/(Buffer_IIV(:,:,rho_)/xmass(2))/1.6E-19 ! in eV
+          temperatureTe(1:iSize,1:jSize) = ((xmass(2)*x_h+xmass(3)*x_o)/xmass(2)) * &
+               Buffer_IIV(:,:,pe_)/(Buffer_IIV(:,:,rho_)/xmass(2))/1.6E-19 ! in eV
        elsewhere
           temperature(1:iSize,1:jSize)  =5000.0
           temperatureTe(1:iSize,1:jSize)=temperature(1:iSize,1:jSize)/7.8
@@ -804,7 +802,7 @@ contains
 
     Buffer_IIV = 0.
 
-    !Fill pressure and densityå
+    !Fill pressure and density
     do i=1,iSize; do j=1,jSize
        if( i<imin_j(j) .or. vm(i,j) <= 0.0 ) then
           Buffer_IIV(i,j,pe_) = -1.
@@ -834,10 +832,6 @@ contains
              Buffer_IIV(i,j,Hdens_) = -1.
              Buffer_IIV(i,j,Odens_) = -1.
           else
-             do k = kmin(1), kmax(1) ! electron 
-                Buffer_IIV(i,j,pe_) = Buffer_IIV(i,j,pe_) + &
-                     vm(i,j)**2.5*eeta(i,j,k)*ABS(alamc(k))
-             end do
              do k=kmin(2),kmax(2) ! H+
                 Buffer_IIV(i,j,Hpres_) = Buffer_IIV(i,j,Hpres_) + &
                      vm(i,j)**2.5*eeta(i,j,k)*ABS(alamc(k))
