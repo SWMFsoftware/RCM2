@@ -667,8 +667,8 @@ contains
       integer, save :: iLastIT=-1
       character(len=4)  :: extension
       character(len=10) :: time_string = "xxxxxxxxxx"
-      character(len=79) :: StringLine ! for IDL output
-      !
+      character(len=500) :: StringLine ! for IDL output
+
       REAL (rprec), DIMENSION (1-n_gc:isize+n_gc, 1-n_gc:jsize+n_gc) :: &
            RCM_p, RCM_n, RCM_T, RCM_PVgamma, MHD_p, veff, RCM_Hpp, RCM_Opp, &
            RCM_Hpn, RCM_HpT, RCM_Opn, RCM_OpT, RCM_HpPVgamma,RCM_OpPVgamma, &
@@ -805,15 +805,13 @@ contains
             select case(plot_var(iFN))
             case('min')
                ! Header string containing units for coordinates and variables
-               StringLine='deg deg R R amu/cm3 eV nPa amu/cm3 eV nPa_var22'
+               StringLine='deg deg R R amu/cm3 eV nPa amu/cm3 eV nPa'
                write(LUN) StringLine
                ! Time step, time, no. dimensions, equation params, variables
-               write(LUN) iIT,real(iCurrentTime),2,1,8
+               write(LUN) iIT,real(iCurrentTime),2,0,8
                ! Grid size
                write(LUN) jSize+1, iSize
-               ! Equation parameter (unused now)
-               write(LUN) 0.0
-               ! Name of coordinates, variables and equation parameters
+               ! Name of coordinates and variables
                if(.not. DoMultiFluidGMCoupling)then   
                   StringLine = 'lon lat x y rho T p rho_mhd T_mhd p_mhd'
                   write(LUN) StringLine
@@ -824,62 +822,60 @@ contains
                end if
             case('max')
                ! Header string containing units for coordinates and variables
-               StringLine='deg deg R R hr - - nT - - S S S - - - - - -_var22'
+               StringLine='deg deg R R hr - - nT - - S S S - - - - - -'
                write(LUN) StringLine
                ! Time step, time, no. dimensions, equation params, variables
-               write(LUN) iIT,real(iCurrentTime),2,1,17
+               write(LUN) iIT,real(iCurrentTime),2,0,17
                ! Grid size
                write(LUN) jSize+1, iSize
-               ! Equation parameter (unused now)
-               write(LUN) 0.0
-               ! Name of coordinates, variables and equation parameters
+               ! Name of coordinates and variables 
                StringLine = 'lon lat x y mlt bnd vm b v '// &
                     'birk pedlam pedpsi hall eflux eavg pvg birkmhd sH sP'
                write(LUN) StringLine
             case('mc1')
                ! Header string containing units for coordinates and variables
-               StringLine='deg deg R R hr - - nT V microAmp/m2 S S erg/cm2/s eV '//&
-                    'cm-3 eV nPa - cm-3 eV nPa - cm-3 eV nPa - cm-3 nPa - cm-3_var22'
+               StringLine= &
+                    'deg deg R R hr - - nT V microAmp/m2 S S erg/cm2/s eV '//&
+                    'cm-3 eV nPa - cm-3 eV nPa - cm-3 eV nPa - cm-3 nPa - cm-3'
                write(LUN) StringLine
                ! Time step, time, no. dimensions, equation params, variables
-               write(LUN) iIT,real(iCurrentTime),2,1,17
+               write(LUN) iIT,real(iCurrentTime),2,0,28
                ! Grid size
                write(LUN) jSize+1, iSize
-               ! Equation parameter (unused now)
-               write(LUN) 0.0
-               ! Name of coordinates, variables and equation parameters
-               StringLine = 'lon lat x y mlt bnd vm b v '// &
-                    'birk sigmaP sigmaH eflux eavg n_e T_e P_e pvg_e n_h T_h P_h pvg_h n_o T_o P_o pvg_o '//&
-                    'n_total P_total pvg_total n_plasmasphere'
+               ! Name of coordinates and variables
+               StringLine = &
+                    'lon lat x y mlt bnd vm b v birk sigmaP sigmaH eflux '//&
+                    'eavg n_e T_e P_e pvg_e n_h T_h P_h pvg_h n_o T_o P_o '//&
+                    'pvg_o n_total P_total pvg_total n_plasmasphere'
                write(LUN) StringLine
             case('mc2')
                ! Header string containing units for coordinates and variables
-               StringLine='deg deg R R hr - - nT V microAmp/m2 S S erg/cm2/s eV '//&
-                    'cm-3 eV nPa - cm-3 eV nPa - cm-3 eV nPa - cm-3 nPa - cm-3_var22'
+               StringLine=&
+                    'deg deg R R hr - - nT V microAmp/m2 S S erg/cm2/s eV '//&
+                    'cm-3 eV nPa - cm-3 eV nPa - cm-3 eV nPa - cm-3 nPa - cm-3'
                write(LUN) StringLine
                ! Time step, time, no. dimensions, equation params, variables
-               write(LUN) iIT,real(iCurrentTime),2,1,17
+               write(LUN) iIT,real(iCurrentTime),2,0,28
                ! Grid size
                write(LUN) jSize+1, iSize
-               ! Equation parameter (unused now)
-               write(LUN) 0.0
-               ! Name of coordinates, variables and equation parameters
-               StringLine = 'lon lat x y mlt bnd vm b v '// &
-                    'birk sigmaP sigmaH eflux eavg n_e T_e P_e pvg_e n_h T_h P_h pvg_h n_o T_o P_o pvg_o '//&
-                    'n_total P_total pvg_total n_plasmasphere'
+               ! Name of coordinates and variables
+               StringLine = &
+                    'lon lat x y mlt bnd vm b v birk sigmaP sigmaH eflux '//&
+                    'eavg n_e T_e P_e pvg_e n_h T_h P_h pvg_h n_o T_o P_o '//&
+                    'pvg_o n_total P_total pvg_total n_plasmasphere'
                write(LUN) StringLine
             end select
          end select
 
-         !Compute some variables
-
-         ! For CCMC output, we will compute moments in a different way (for now).
+         ! For CCMC output, we will compute moments in a different way.
          ! Later, will switch to this for all kinds of output:
          if ( plot_var(iFN) == 'mc1' .OR. plot_var(iFN) == 'mc2') then
             CALL Rcm_compute_plasma_moments
-            ! No need to wrap ghostcells, as this calculation runs over all cells
-            sigma_P = sqrt (pedpsi*pedlam)   ! field-line integrated Pedersen conductance
-            sigma_H = hall ! field-line integrated Hall conductance
+            ! No need to wrap ghostcells, as this runs over all cells
+            ! field-line integrated Pedersen conductance
+            sigma_P = sqrt(pedpsi*pedlam)
+            ! field-line integrated Hall conductance
+            sigma_H = hall
          end if
 
          if(.not.DoMultiFluidGMCoupling)then
