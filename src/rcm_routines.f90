@@ -7,7 +7,7 @@ module RCM_routines
 
 contains
 
-  !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   !
   !
   FUNCTION Bndy (bndloc, jsize, bj)
@@ -17,15 +17,15 @@ contains
     REAL (rprec)              :: Bndy
     !
     !   Function to determine whether you are outside RCM
-    !   boundary as defined by array AIN; returns boundary 
+    !   boundary as defined by array AIN; returns boundary
     !   location (non-integer I-value) for given bj
-    !   Written 1/25/96 frt                                   
-    !                                                                       
+    !   Written 1/25/96 frt
+    !
     !   Dependency: BJMOD
     !
     REAL (rprec)    :: bip, bim, bj_point, bjp, bjm
     INTEGER (iprec) :: jm, jp
-    !                                                                       
+    !
     !   Call to BJMOD returns bj_point in [jwrap,jsize), then jm is in
     !   [jwrap,jsize) and jp1 is in [jwrap+1,jsize], so all three indices are
     !   within the required range.
@@ -35,15 +35,15 @@ contains
     jp       = jm + 1
     bjp = REAL (jp,rprec)
     bjm = REAL (jm,rprec)
-    !                                                                       
+    !
     bim = bndloc (jm)
     bip = bndloc (jp)
-    !                                                                       
+    !
     bndy = bim * (bjp - bj_point) + bip * (bj_point - bjm)
-    !                                                                       
+    !
   END FUNCTION Bndy
   !
-  !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   !
   SUBROUTINE Compute_vel_edges (dt)
 
@@ -53,11 +53,11 @@ contains
     !   Last update: 07-22-85                   by:rws
     !                01-29-96 replace imin with min_j - frt
     !                10-05-98 delete alast stuff - stanislav
-    !                                                                       
+    !
     !   This subroutine computes dbidt and dbjdt, the
     !   velocities of the string of bi,bj pts due to
     !   simple drift motion.
-    !                                                                       
+    !
     !   Dependency:  GNTRP
     !__________________________________________________________________________
     !
@@ -96,7 +96,7 @@ contains
        !
        mbeg = mpoint (k)
        mend = mbeg + npoint (k) - 1
-       !                                                                       
+       !
        DO m = mbeg, mend
           !
           IF (ivoptn == 1) THEN
@@ -184,7 +184,7 @@ contains
 
   END SUBROUTINE Compute_vel_edges
   !
-  !                                                                       
+  !
   ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   !
   !
@@ -194,17 +194,19 @@ contains
     REAL (rprec), INTENT (IN) :: dt
 
     INTEGER :: i, j, kc
-    REAl (rprec) :: decayrate
+    REAl (rprec) :: decayrate, electron_decayrate
 
     ! Return if decay is not on
     if(.not.UseDecay) return
 
     decayrate = EXP(-(dt/DecayTimescale))
+    electron_decayrate = EXP(-(dt/TauElectronDecay))
     do kc = 2, kcsize
        do i = 1, isize
           do j = 1, jsize
              if(eeta(i,j,kc)>0.)then
-                eeta(i,j,kc) = eeta(i,j,kc) * decayrate
+                if(kc > 30) eeta(i,j,kc) = eeta(i,j,kc) * decayrate
+                if(kc < 31) eeta(i,j,kc) = eeta(i,j,kc) * electron_decayrate
              end if
           end do
        end do
@@ -212,7 +214,7 @@ contains
 
   END SUBROUTINE decay
   !
-  !                                                                       
+  !
   ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   !
   !9. Facilities for moving particles (both edges and grid) in one time step.
@@ -223,12 +225,12 @@ contains
     REAL (rprec), INTENT (IN) :: dt
     !_________________________________________________________________________
     !
-    !  Time step subroutine to do simple euler time step                    
-    !                                                                       
+    !  Time step subroutine to do simple euler time step
+    !
     !  Last update:
-    !   8-29-86                                                 
-    !   1-29-96 frt added boundary arrays and calls to bndy     
-    !   3-19-97 rws ibtime and nbf added as calling parameters  
+    !   8-29-86
+    !   1-29-96 frt added boundary arrays and calls to bndy
+    !   3-19-97 rws ibtime and nbf added as calling parameters
     !   10-02-98 sts fudge is sized as kcdim for electrons on grid
     !   may 99 sts removed hardy coeffs--they are in module
     !_________________________________________________________________________
@@ -275,7 +277,7 @@ contains
   END SUBROUTINE Move_plasma
   !
   !
-  !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   !
   !
   SUBROUTINE Move_plasma_edges (dt)
@@ -356,7 +358,7 @@ contains
   END SUBROUTINE Move_plasma_edges
   !
   !
-  !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   !
   !
   SUBROUTINE Edgfix (k, delta_t, epslon)
@@ -480,7 +482,7 @@ contains
     !__________________________________________________________________________
     !   Subroutine to advance eta distribution for a time step
     !   by a lifetime-based algorithm (raw doc dated 5/12/87)
-    !                                                                       
+    !
     !   Last update: 05-11-88
     !                01-29-96 ain ,min_j and calls to bndy added - frt
     !   rws          06-05-97 etamov changed to reflect new use of
@@ -513,7 +515,7 @@ contains
        !
        CALL Deriv_i (veff, isize, jsize, imin_j, dvefdi)
        CALL Deriv_j (veff, isize, jsize, imin_j, 1.0D+25, dvefdj)
-       WHERE (ABS(dvefdj) > 1.0E+24) 
+       WHERE (ABS(dvefdj) > 1.0E+24)
           dvefdj = 0.0_rprec
           dvefdi = 0.0_rprec
        END WHERE
@@ -536,7 +538,7 @@ contains
              didt   =   dvefdj (i,j) / fac (i,j)
              djdt   = - dvefdi (i,j) / fac (i,j)
              !         biold  = MAX (REAL(i,rprec) - didt * dt , REAL(imin_j(j)))
-             biold  = REAL(i,rprec) - didt * dt 
+             biold  = REAL(i,rprec) - didt * dt
              bjold  = Bjmod_real (REAL(j,rprec) - djdt * dt, jsize )
 
              !         rate   = Ratefn (fudgec(kc), alamc(kc), sini (i,j), bir (i,j), &
@@ -547,7 +549,7 @@ contains
              rate   = 0.0
 
              IF (ie == 1) THEN
-                IF (kc ==1 ) THEN 
+                IF (kc ==1 ) THEN
                    ! Cold plasmaspheric electrons. Dont' do pitch angle scattering,
                    ! but compute refilling rates for the plasmasphere
                    rate = - Plasmasphere_refill_rate (r_dist, doy, &
@@ -559,7 +561,7 @@ contains
                    rate = Ratefn (fudgec(kc), alamc(kc), sini(i,j),&
                         bir (i,j), vm(i,j), mass_factor)
                 END IF
-             ELSE 
+             ELSE
                 ! Positive ions, compute charge-exchange rate is it is on:
                 IF (L_dktime) THEN
                    rate = Cexrat (ie, ABS(alamc(kc))*vm(i,j), &
@@ -584,7 +586,7 @@ contains
 
       REAL (rprec), INTENT (IN) :: fudgx,alamx,sinix,birx,vmx,xmfact
       REAL (rprec)              :: Ratefn
-      !                                                                       
+      !
       !   Function subprogram to compute precipitation rate
       !   Last update:  04-04-88
       !
@@ -624,7 +626,7 @@ contains
        nbf = 1
        ALLOCATE (ibtime (nbf))
        ibtime = -999
-    ELSE IF(itype_bf == 1) THEN 
+    ELSE IF(itype_bf == 1) THEN
        n = 1
        DO
           CALL Read_array ('input/rcmxmin_inp', n, label, ARRAY_2D = xmin, &
@@ -684,7 +686,7 @@ contains
        ALLOCATE (itime_etac (n_t), etac_inp(kcsize,n_t))
        itime_etac = 0
        etac_inp = 0.0
-    ELSE 
+    ELSE
        call CON_STOP('ILLEGAL VALUE OF I_eta_bd ON INPUT')
     END IF
     called_already = .TRUE.
@@ -823,8 +825,8 @@ contains
     REAL(rprec),      INTENT (OUT):: bicrss (n_bicrss)
     !
     !   last update: 09-17-86
-    !               01-29-96 frt - added ain array                          
-    !                                                                       
+    !               01-29-96 frt - added ain array
+    !
     !   subroutine to find all crossings of grid line j_line by species
     !   k_edge inner edge.
     !   nbc = # of crossings found
@@ -845,10 +847,10 @@ contains
     END IF
     n = 0
     bj_line = REAL (j_line,rprec)
-    !                                                                       
+    !
     mbeg = mpoint (k_edge)
     mend = mbeg + npoint (k_edge) - 1
-    !                                                                       
+    !
     loop_10: DO m = mbeg, mend
        mnext = m + 1
        IF (m == mend) mnext = mbeg
@@ -882,7 +884,7 @@ contains
           !
        END IF
     END DO loop_10
-    !                                                                       
+    !
     nbc = n
     IF (nbc > 1) THEN
        !
@@ -901,7 +903,7 @@ contains
           bicrss (ntest) = bi_temp
        END DO
     END IF
-    !                                                                       
+    !
   END SUBROUTINE Crschk
   !
   !
@@ -944,7 +946,7 @@ contains
     !
     ALLOCATE (ivtime (nvmax), vinput (nvmax), vinput_phase(nvmax) )
     !
-    OPEN (UNIT = LUN, STATUS ='OLD', FILE = trim(NameRcmDir)//'input/rcmpcp_inp') 
+    OPEN (UNIT = LUN, STATUS ='OLD', FILE = trim(NameRcmDir)//'input/rcmpcp_inp')
     DO nv = 1, nvmax
        READ (LUN, *) ivtime (nv), vinput (nv), vinput_phase(nv)
     END DO
@@ -971,7 +973,7 @@ contains
     INTEGER (iprec) :: nkp, nkpmax, istat
     LOGICAL :: logical_flag
     LOGICAL, SAVE :: called_already = .FALSE.
-    !                                                                       
+    !
     IF (called_already) RETURN
     !
     INQUIRE (FILE = trim(NameRcmDir)//'input/rcmkp_inp', EXIST = logical_flag)
@@ -1006,18 +1008,18 @@ contains
   SUBROUTINE Read_winds
     USE Rcm_variables, junk_v => v
     !__________________________________________________________________________
-    !                                                                       
+    !
     !     last update 08-27-86        written by g.a.mantjoukis
-    !                                                                       
+    !
     !     subroutine to compute pedersen and hall winds on
     !     the rcm-specified grid
-    !                                                                       
-    !     iwind=0    no wind                                                
-    !     iwind=1    tarpley-type wind (calculatoin)                        
-    !     iwind=2    roble sq winds                                         
-    !                                                                       
+    !
+    !     iwind=0    no wind
+    !     iwind=1    tarpley-type wind (calculatoin)
+    !     iwind=2    roble sq winds
+    !
     !-------------------------------------------------------------
-    !                                                                       
+    !
     INTEGER (iprec) :: i, j, is, n, istat
     CHARACTER (LEN=80) :: form_string
     REAL(rprec) :: s, sm, vnorm, sv, su, phi, v, u, ath, c8, c6, c4, c2, c1,&
@@ -1068,7 +1070,7 @@ contains
        u2 = - 1.3858640_rprec
        u4 = - 1.1390120_rprec
        u6 = - 0.4121196_rprec
-       !                                                                       
+       !
        v0 = - 0.4549289_rprec
        v2 = + 3.0388490_rprec
        v4 = - 3.6561400_rprec
@@ -1139,11 +1141,11 @@ contains
     !
     !_________________________________________________________________________
     !   last update:  03-31-88             by:rws
-    !                                                                       
+    !
     !   this subroutine adds a new pt at m+1 and moves
     !   subsequent pts
     !   by 1.  bi(m+1)=addi;  bj(m+1)=addj.
-    !                                                                       
+    !
     !   if(is.lt.0) then the pt will be encoded as a held pt.
     !   CALLS:       NCODE
     !   CALLED FROM: EXPAND_EDGE
@@ -1179,11 +1181,11 @@ contains
        IF (mpoint (kk) >= mp) mpoint (kk) = mpoint (kk) + 1
     END DO
     mpoint (ksize + 1) = mpoint (ksize) + npoint (ksize)
-    !                                                                       
+    !
     mpp = mp + 1
     IF (mpp > mpoint (k) + npoint (k) - 1)     mpp = mpoint (k)
     etab (mp) = 0.5_rprec * (etab (m) + etab (mpp) )  ! set etab for new point
-    !                                                                       
+    !
     IF (mpoint (ksize) + npoint (ksize) - 1 >= nptmax) THEN
        print*,ksize,nptmax
        print*,mpoint
@@ -1202,25 +1204,25 @@ contains
     INTEGER (iprec), INTENT (IN) :: k
     !
     !_____________________________________________________________________________
-    !                                                                       
-    !  last update: 03-31-88              by: rws                           
-    !               01-25-96                  frt - added ain               
-    !                                                                       
-    !  this subroutine marches around inner edge k, deciding 
+    !
+    !  last update: 03-31-88              by: rws
+    !               01-25-96                  frt - added ain
+    !
+    !  this subroutine marches around inner edge k, deciding
     !  whether to add new inner edge tracer pts.  a new point
-    !  is inserted  between pt m and pt m+1 if              
-    !                                                                       
-    !      (bi(m+1)-bi(m))**2+(bj(m+1)-bj(m))**2 > dstmax**2                
-    !                                                                       
-    !  Actual point addition procedure occurs in routine ADDAPT     
-    !                                                                       
+    !  is inserted  between pt m and pt m+1 if
+    !
+    !      (bi(m+1)-bi(m))**2+(bj(m+1)-bj(m))**2 > dstmax**2
+    !
+    !  Actual point addition procedure occurs in routine ADDAPT
+    !
     !> Skeleton of this subprogram (algorithm):
     !
     !>    Find 1st point of the edge and assign it to m.
     !>    Enter:
     !>    Loop do:
     !>       Find mnext
-    !>       Check distance between m and mnext: 
+    !>       Check distance between m and mnext:
     !>       IF (distance is not too large) THEN
     !>          m = m + 1
     !>          CYCLE loop with new m
@@ -1281,7 +1283,7 @@ contains
           !         bjz will be used to add a point:
           !
           IF ( ABS(rho) <= rhomax) THEN
-             !                                                                       
+             !
              !            Compute new estimate of point location:
              !
              bi1 = biz + rho * dj
@@ -1318,16 +1320,16 @@ contains
              END IF
           END IF
           bjz = Bjmod_real (bjz, jsize )
-          !                                                                       
+          !
           !         II. Adding a new point:
           !
           !         If both points m and mnext are held, new point should be held too:
-          !                                                                       
+          !
           is = 1
           CALL Dcode (itrack, SIZE(itrack), m,     ism)
           CALL Dcode (itrack, SIZE(itrack), mnext, isp)
           IF (ism < 0 .AND. isp < 0)  is = -1
-          !                                                                       
+          !
           CALL Add_point (k, m, biz, bjz, is )
        END IF
        !
@@ -1336,7 +1338,7 @@ contains
   END SUBROUTINE Expand_edge
   !
   !
-  !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   !
   !
   SUBROUTINE Corect (biq, bjq, m, mnext, a3, a4, di, dj, rho, vmbar)
@@ -1347,7 +1349,7 @@ contains
     !
     !__________________________________________________________________________
     !   last update: 05-16-85                by:rws
-    !                                                                       
+    !
     !   this subroutine computes a correction factor rho
     !   to be used in adding new inner edge tracer pts.
     !   see 'rawolf.docmir2.text' for explanation
@@ -1362,10 +1364,10 @@ contains
     !
     i = MIN (INT (biq), SIZE(vm, DIM=1)-1)
     j = Bjmod_int ( INT(bjq), jsize )
-    !                                                                       
+    !
     di = bi (mnext) - bi (m)
     dj = a3 - a4
-    !                                                                       
+    !
     jnext = Bjmod_int (j + 1, jsize)
     d     = vm (i,j) + vm (i+1,jnext) - vm (i,jnext) - vm (i+1,j)
     a     = d * di * dj
@@ -1376,11 +1378,11 @@ contains
     vvmp  = Gntrp_2d (vm, isize, jsize, bi (mnext), bj (mnext))
     vvmm  = Gntrp_2d (vm, isize, jsize, bi (m), bj (m))
     vmbar = 0.5_rprec * (vvmp + vvmm)
-    !                                                                       
+    !
     !
     vmb   = Gntrp_2d (vm, isize, jsize, biq, Bjmod_real(bjq,jsize))
     c     = vmbar - vmb
-    !                                                                       
+    !
     IF (ABS(a) > 1.E-5 .AND. b**2 > 1.E-5 .AND. 4.0*a*c/b**2 <= 1.0_rprec ) THEN
        rho = (0.5_rprec*b/a) * (- 1.0_rprec + SQRT (1.0_rprec - (4.0_rprec*a*c/b**2) ) )
     ELSE
@@ -1500,7 +1502,7 @@ contains
     !     the same for all i and given J, ieff parameter is not
     !     relevant. But watch out if this changes later. Also, the
     !     boundary is assumed to be an ellipse (since we are
-    !     calling this subroutine!), but it does not have to 
+    !     calling this subroutine!), but it does not have to
     !     coincide with the integer grid line. Location of bndy
     !     is given fully by the parameters of the ellipse.
     !
@@ -1586,7 +1588,7 @@ contains
                colat(i,j) > thetaa(j) .AND. &
                icntrl == -2) THEN
              !
-             !          use heppner-maynard directly in region 1 for 
+             !          use heppner-maynard directly in region 1 for
              !          use with rcm.
              !
              glong = MOD (aloct(i,j) + pi, pi_two)
@@ -1636,13 +1638,13 @@ contains
     !  polar cap convection model for use with RCM. yco arrays
     !  holds Legendre coefficients (same for all HM models),
     !  these come from the HM model.
-    ! 
+    !
     !  AAHM, BBHM, DDXHM, DDYHM arrays hold parameters of two
-    !  ellipses for each HM model. First ellipse (with index 1) 
+    !  ellipses for each HM model. First ellipse (with index 1)
     !  is the poleward boundary of field-reversal region, and
     !  second ellipse is the equatorward boundary of that region.
     !  Second ellipse corresponds to the main RCM bounday.
-    !  VVMAX and VVMIN hold maximun (dawn) and minimun (dusk) 
+    !  VVMAX and VVMIN hold maximun (dawn) and minimun (dusk)
     !  potentials for each HM model.  All these arrays (as I
     !  understand) were obtained by Bob Spiro.
     !
@@ -1673,7 +1675,7 @@ contains
          .317732e+01, .105778e+02, .307916e+02, .825507e+02, .209304e+03, .509767e+03, .120459e+04, .278052e+04, .629979e+04,&
                                 !
          .584734e+02, .779645e+02, .652298e+02, .481754e+02, .310971e+02, .172496e+02, .798499e+01, .291571e+01, .728927e+00,&
-                                !  in line above, I changed the first constant from .30... to 
+                                !  in line above, I changed the first constant from .30... to
                                 !    .31... since Heppner-Maynard official release has it
                                 !    this way, in constract to Bob Spiro's verion. Stanislav
                                 !    March 8 1999.
@@ -1732,8 +1734,8 @@ contains
     !
     DO ip = 1,7
        DO  n = 1, 2
-          ahm(n,ip)  = aahmTransposed(ip,n)    
-          bhm(n,ip)  = bbhmTransposed(ip,n)   
+          ahm(n,ip)  = aahmTransposed(ip,n)
+          bhm(n,ip)  = bbhmTransposed(ip,n)
           dxhm(n,ip) = ddxhmTransposed(ip,n)
           dyhm(n,ip) = ddyhmTransposed(ip,n)
        END DO
@@ -1822,7 +1824,7 @@ contains
     cph   = COS(xlon)
     !
     IF (ABS(p(1,1)) < TINY (1.0_rprec)) THEN
-       p(1,1)  = 1.0_rprec 
+       p(1,1)  = 1.0_rprec
        dp(1,1) = 0.0_rprec
        sp(1)   = 0.0_rprec
        cp(1)   = 1.0_rprec
@@ -1900,7 +1902,7 @@ contains
     INTEGER (iprec), INTENT (IN) :: i_max
     REAL (rprec), INTENT (IN)    :: array (i_max), bi
     REAL (rprec)                 :: Gntrp_1d
-    !                                                                       
+    !
     !   This function subprogram interpolates 1-dim. ARRAY to return
     !   the value of ARRAY at the non-integer point BI.
     !
@@ -1933,8 +1935,8 @@ contains
     !
     ii = MAX (1, MIN (INT (bi), i_max-1))
     fi = REAL (ii,rprec)
-    !                                                                       
-    !                                                                       
+    !
+    !
     bj    = Bjmod_real( bbj, j_max)
     jn    = NINT (bj)
     IF (ABS (bj-REAL(jn,rprec)) < 1.0E-4_rprec) THEN  ! 1-d interp.
@@ -1950,7 +1952,7 @@ contains
        !
        a1 = (1.0_rprec-(bi-fi))*array(ii,jj) + (bi-fi)*array(ii+1,jj)
        a2 = (1.0_rprec-(bi-fi))*array(ii,jp1) + (bi-fi)*array(ii+1,jp1)
-       !                                                                       
+       !
        Gntrp_2d = (1.0_rprec - (bj-fj)) * a1 + (bj-fj) * a2
        !
     END IF
@@ -1970,8 +1972,8 @@ contains
     !
     ii = MAX (1, MIN (INT (bi), i_max-1))
     fi = REAL (ii,rprec)
-    !                                                                       
-    !                                                                       
+    !
+    !
     bj    = Bjmod_real ( bbj,j_max)
     jn    = NINT (bj)
     IF (ABS (bj-REAL(jn,rprec)) < 1.0E-4_rprec) THEN  ! 1-d interp.
@@ -1987,7 +1989,7 @@ contains
        !
        a1 = (1.0_rprec-(bi-fi))*array(ii,jj) + (bi-fi)*array(ii+1,jj)
        a2 = (1.0_rprec-(bi-fi))*array(ii,jp1) + (bi-fi)*array(ii+1,jp1)
-       !                                                                       
+       !
        IF (jp1 == j_max) a2 = a2 + pi_two
        IF (jj  == jwrap)      a1 = 0.0_rprec
        IF (jp1 == jwrap)      a2 = a2 + pi_two      ! sts, feb 22
@@ -2031,7 +2033,7 @@ contains
     IF (ii < imin_j(jj)) THEN
        ca = 0.0
     ELSE
-       ca = (1.0-di)*(1.0-dj) 
+       ca = (1.0-di)*(1.0-dj)
     END IF
     IF (ii+1 < imin_j(jj)) THEN
        cc = 0.0
@@ -2048,7 +2050,7 @@ contains
     ELSE
        cd = di*dj
     END IF
-    !                                                                       
+    !
     Intrp_2d_grid = ca*array(ii,jj)+cb*array(ii,jj+1)+ &
          cc*array(ii+1,jj)+cd*array(ii+1,jj+1)
     Intrp_2d_grid = Intrp_2d_grid / (ca+cb+cc+cd)
@@ -2067,7 +2069,7 @@ contains
 
     REAL (rprec), INTENT (IN)    :: array (:), bi
     REAL (rprec)                 :: Interp_1d
-    !                                                                       
+    !
     !   This function subprogram interpolates 1-dim. ARRAY to return
     !   the value of ARRAY at the non-integer point BI.
     !
@@ -2113,8 +2115,8 @@ contains
     !
     ii = MAX (1, MIN (INT (bi), imax_array-1))
     fi = REAL (ii,rprec)
-    !                                                                       
-    !                                                                       
+    !
+    !
     !   Decide which interpolation to perform and proceed:
     !
     jn    = NINT (bj)
@@ -2133,7 +2135,7 @@ contains
        !
        a1 = (1.0_rprec-(bi-fi))*array(ii,jj)  + (bi-fi)*array(ii+1,jj)
        a2 = (1.0_rprec-(bi-fi))*array(ii,jp1) + (bi-fi)*array(ii+1,jp1)
-       !                                                                       
+       !
        Interp_2d = (1.0_rprec - (bj-fj)) * a1 + (bj-fj) * a2
        !
     END IF
@@ -2147,7 +2149,7 @@ contains
     INTEGER (iprec), INTENT (IN) :: index_3
     REAL (rprec), INTENT (IN)    :: array (:,:,:), bi, bj
     REAL (rprec)                 :: Interp_2d_of3d
-    !                                                                       
+    !
     !   This is the same as Gntrp_2d but for a 3-dim array, see comments for
     !   Gntrp_2d. A separate function is needed since if Gntrp_2d were used,
     !   then we would need to pass array sections (the other option is Fortran
@@ -2175,8 +2177,8 @@ contains
          call CON_STOP('GNTRP_2D_OF3D: index_3 OUT OF RANGE')
     ii = MAX (1, MIN (INT (bi), imax_array-1))
     fi = REAL (ii,rprec)
-    !                                                                       
-    !                                                                       
+    !
+    !
     !   Decide which interpolation to perform and proceed:
     !
     jn    = NINT (bj)
@@ -2196,7 +2198,7 @@ contains
        !
        a1 = (1.0_rprec-(bi-fi))*array(ii,jj,index_3)  + (bi-fi)*array(ii+1,jj,index_3)
        a2 = (1.0_rprec-(bi-fi))*array(ii,jp1,index_3) + (bi-fi)*array(ii+1,jp1,index_3)
-       !                                                                       
+       !
        Interp_2d_of3d = (1.0_rprec - (bj-fj)) * a1 + (bj-fj) * a2
        !
     END IF
@@ -2214,7 +2216,7 @@ contains
     REAL (rprec)                 :: Bjmod_real
     !__________________________________________________________________________
     !   last update: 11-28-84               by:rws
-    !                                                                       
+    !
     !   this function subporgram returns bjmod with a value
     !   between jwrap and jmax-1. In RCM, arrays in j (local time angle)
     !   are dimensioned from 1 to jsize, but the grid wraps around and
@@ -2236,7 +2238,7 @@ contains
     !   Dependency:  none
     !
     Bjmod_real = bj
-    !                                                                       
+    !
     do_1: DO
        IF (Bjmod_real > REAL (jsize,rprec)) THEN
           Bjmod_real = Bjmod_real - REAL (jsize,rprec)
@@ -2266,7 +2268,7 @@ contains
     INTEGER (iprec)              :: Bjmod_int
     !__________________________________________________________________________
     !   last update: 11-28-84               by:rws
-    !                                                                       
+    !
     !   this function subporgram returns bjmod with a value
     !   between jwrap and jmax-1. In RCM, arrays in j (local time angle)
     !   are dimensioned from 1 to jsize, but the grid wraps around and
@@ -2288,10 +2290,10 @@ contains
     !   Dependency:  none
     !
     Bjmod_int = bj
-    !                                                                       
+    !
     do_1: DO
        IF (Bjmod_int > jsize) THEN
-          Bjmod_int = Bjmod_int - jsize 
+          Bjmod_int = Bjmod_int - jsize
        ELSE
           EXIT do_1
        END IF
@@ -2322,7 +2324,7 @@ contains
     REAL (rprec), INTENT (OUT):: b1_out, b2_out, b3_out
     !
     !   Last update: 11-29-84          by:rws
-    !                                                                       
+    !
     !   This subroutine adjusts a triad of input bj values (bj1, bj2, bj3)
     !   to the same modulus.  b1, b2, and b3 are the returned values.
     !
@@ -2337,7 +2339,7 @@ contains
     ic1 = (ABS (b1_in - b2_in) < diftst)
     ic2 = (ABS (b1_in - b3_in) < diftst)
     ic3 = (ABS (b2_in - b3_in) < diftst)
-    !                                                                       
+    !
     IF (ic1 .AND. ic2 .AND. ic3 ) THEN
        b1_out = b1_in
        b2_out = b2_in
@@ -2384,11 +2386,11 @@ contains
     !
     !
     !   last update: 03-31-88              by: rws
-    !               09-19-97                  rws                           
-    !                                     changed algorithm used            
+    !               09-19-97                  rws
+    !                                     changed algorithm used
     !   Sat May 22 11:09:53 MDT 1999  corrected a bug (y2 vs ym)
-    !                                                                       
-    !   this subroutine marches around inner edge k searching 
+    !
+    !   this subroutine marches around inner edge k searching
     !   for long thin tails to eliminate.  control%fmrwif_dlim is a control
     !   parameter that gives the minimum allowed tail thickness (RE).
     !
@@ -2426,7 +2428,7 @@ contains
     mbeg   = mpoint (k)
     m      = mbeg
     mcount = 0
-    !                                                                       
+    !
     DO
        mend = mbeg + npoint (k) - 1
        !
@@ -2436,19 +2438,19 @@ contains
        mlast = m - 1
        IF (m == mend) mnext = mbeg
        IF (m == mbeg) mlast = mend
-       !                                                                       
+       !
        CALL Adjust_bj_3 (bj(mlast), bj(m), bj(mnext), b1, b2, b3 )
-       !                                                                       
+       !
        IF ( Extremum(b1,b2,b3) .OR. Extremum(bi(mlast), bi(m), bi(mnext))) THEN
           !
           !         calculate distance from m to m-1 and from m to m+1
-          !                                                                       
+          !
           rthis(1) = Gntrp_2d (xmin, isize, jsize, bi(m), bj(m))
           rthis(2) = Gntrp_2d (ymin, isize, jsize, bi(m), bj(m))
-          !                                                                       
+          !
           rlast(1) = Gntrp_2d (xmin, isize, jsize, bi(mlast), bj(mlast))
           rlast(2) = Gntrp_2d (ymin, isize, jsize, bi(mlast), bj(mlast))
-          !                                                                       
+          !
           rnext(1) = Gntrp_2d (xmin, isize, jsize, bi(mnext), bj(mnext))
           rnext(2) = Gntrp_2d (ymin, isize, jsize, bi(mnext), bj(mnext))
           !
@@ -2466,7 +2468,7 @@ contains
              f = d_to_next / d_to_last
              rlast = f * rlast + (1.0_rprec - f) * rthis
           END IF
-          !                                                                       
+          !
           !
           !         Check if the middle point is held:
           CALL Dcode (itrack, SIZE(itrack), m, is)
@@ -2480,7 +2482,7 @@ contains
                   'FARMERS WIFE MUST DELETE A POINT, BUT IT IS HELD')
              !
              CALL Delete_point (k, m)
-             !                                                                       
+             !
              !            must consider previous pt for elimination
              !
              m = m - 1
@@ -2508,16 +2510,16 @@ contains
     !
     !   last update: 03-31-88              by: rws
     !                01-29-96   added calls to bndy and ain arrays - frt
-    !                                                                       
-    !   this subroutine marches around an inner edge deciding whether to    
+    !
+    !   this subroutine marches around an inner edge deciding whether to
     !   delete(zap) pts that are too close together.
     !   point m+1 is zapped if
     !   (bi(m+1)-bi(m))**2 + (bj(m+1)-bj(m))**2 < dstmin**2
-    !                                                                       
+    !
     !     where dstmin= min spacing parameter and neither point m+2
     !     nor point m are being held at the boundary, and point m+1
     !     is not an extremum.
-    !                                                                       
+    !
     !   Elimination stategy: if m+1 is too close to m, then
     !   m+1 will be eliminated only if:
     !       1. Neither m nor m+2 (two neighbors) are held,
@@ -2539,7 +2541,7 @@ contains
     !
     IF (dstmin > 0.5_rprec*dstmax ) &
          call CON_STOP('trouble with sqmin or sqmax - stopping')
-    !                                                                       
+    !
     IF (npoint(k) <= 2) &
          call CON_STOP('ZAP_EDGE: THE EDGE IS TWO POINTS OR LESS IN LENGTH')
     !
@@ -2662,9 +2664,9 @@ contains
     DO kk = 1, kdim
        IF (npoint (kk) /= 0 .AND. mpoint(kk) > mzap) mpoint(kk) = mpoint(kk)-1
     END DO
-    !                                                                       
+    !
     mpoint (kdim + 1) = mpoint (kdim + 1) - 1
-    !                                                                       
+    !
   END SUBROUTINE Delete_point
   !
   !
@@ -2703,10 +2705,10 @@ contains
     INTEGER (KIND=iprec), INTENT (OUT)    :: newitk
     !
     !   last update: 05-24-85             by: rws
-    !                                                                       
+    !
     !   function subprogram to assign a unique identifier to an
     !   inner edge tracer pt.
-    !                                                                       
+    !
     !   ncode.lt.0 means pt is being held
     !   June 3, 1999--Stanislav: changed function to subroutine.
     !   what used to be 'NCODE' is now 'NEWITK'
@@ -2726,7 +2728,7 @@ contains
     LOGICAL :: extremum
     !
     !   last update:  05-16-85           by: rws
-    !                                                                       
+    !
     !   this subroutine tests the triad b1,b2,b3 for an
     !   extremum at b2.
     !   Dependency:  none
@@ -2749,7 +2751,7 @@ contains
     !
     INTEGER (iprec) :: ikind, k, mbeg, mend, mfinal, mk, m, kdim
     REAL(rprec) :: vmtrp (5)
-    !                                                                       
+    !
     ikind = 0
     kdim  = SIZE (alam)
     IF (k_init < 1 .OR. k_final > kdim) THEN
@@ -2760,7 +2762,7 @@ contains
     DO k = k_init, k_final
        !
        WRITE (ntp, "(T02, 'K=', I3.3, TR2, 'ALAM=', ES9.2, TR2, &
-            &'ETA=', ES10.2, TR2, 'MPOINT=', I5, TR2, 'NPOINT=', I5)") & 
+            &'ETA=', ES10.2, TR2, 'MPOINT=', I5, TR2, 'NPOINT=', I5)") &
             k, alam(k), eta(k), mpoint(k), npoint(k)
        !
        mbeg = mpoint (k)
@@ -2996,7 +2998,7 @@ contains
 
     !   Subroutine to advance eta distribution for a time step
     !   by using new CLAWPACK advection routines
-    !                                                                       
+    !
     !   Created:     12-05-00
     !
 
@@ -3006,7 +3008,7 @@ contains
          vcorot, vpar, v, vm, alpha, beta, bir,sini
     REAL(rprec), INTENT (IN) :: dlam, dpsi, signbe, ri, alamc (kcsize), &
          etac (kcsize), xmass (iesize), fudgec(kcsize)
-    REAL(rprec), INTENT (IN OUT) :: eeta (1-n_gc:isize+n_gc,1-n_gc:jsize+n_gc,kcsize)  
+    REAL(rprec), INTENT (IN OUT) :: eeta (1-n_gc:isize+n_gc,1-n_gc:jsize+n_gc,kcsize)
     REAL(rprec), INTENT (IN) :: dt
     INTEGER, INTENT (IN) :: ie_ask
 
@@ -3056,7 +3058,7 @@ contains
        !
        ie = ikflavc(kc)
 
-       IF (ie /= ie_ask) CYCLE 
+       IF (ie /= ie_ask) CYCLE
        mass_factor = SQRT (xmass(1)/xmass(ikflavc(kc)))
        !
        veff = v + vcorot -vpar + vm*alamc(kc)
@@ -3119,7 +3121,7 @@ contains
              loc_djdt (i,j) = - dvefdi (i,j-1) / fac(i-1,j)
 
 
-             IF (i > icut) THEN   
+             IF (i > icut) THEN
                 loc_didt(i,j) = 0.0
                 loc_djdt(i,j) = 0.0
              END IF
@@ -3133,7 +3135,7 @@ contains
              IF (ie == 1) THEN
                 IF (kc == 1) THEN
                    !                Cold Electrons (plasmasphere). No pitch-angle scattering,
-                   !                but account for the refilling from the ionosphere 
+                   !                but account for the refilling from the ionosphere
                    !                rate is > 0, so don't use is as a loss term!!!
                    if (i >= imin_j(j)) then
                       loc_rate(i,j) = &
@@ -3148,7 +3150,7 @@ contains
                    loc_rate(i,j) = Ratefn (fudgec(kc), alamc(kc), sini(i,j),&
                         bir (i,j), vm(i,j), mass_factor)
                 END IF
-             ELSE 
+             ELSE
                 !             Positive ions, compute charge-exchange rate if it is on:
                 IF (L_dktime) THEN
                    loc_rate(i,j) = Cexrat (ie, ABS(alamc(kc))*vm(i,j), &
@@ -3166,8 +3168,8 @@ contains
        !
        !Copy to local variables
        loc_Eta (1:isize, 1:jsize) = eeta (1:isize, 1:jsize, kc)
-       !   
-       ! 
+       !
+       !
        !Call clawpack
        xlower = 0.0
        xupper = isize
@@ -3212,7 +3214,7 @@ contains
        CALL Wrap_around_ghostcells (eeta( :,:,kc), isize, jsize, n_gc)
        !
     END DO
-    !  
+    !
   CONTAINS
     !
     FUNCTION Ratefn (fudgx, alamx, sinix, birx, vmx, xmfact)
@@ -3227,7 +3229,7 @@ contains
       Ratefn = xmfact * ratefn
 
     END FUNCTION Ratefn
-    ! 
+    !
   END SUBROUTINE Move_plasma_grid_NEW
   !
   !
@@ -3235,11 +3237,11 @@ contains
 
     !
     !-------------------------------------------------------------------------
-    !    Determine plasma sheet composition using the Young et al. empirical 
-    !    relationship based on Kp and F10.7 (first and second arguments, 
+    !    Determine plasma sheet composition using the Young et al. empirical
+    !    relationship based on Kp and F10.7 (first and second arguments,
     !    respectively) as give by *Young et al.* [JGR, 1982, Vol. 87 No. A11]
     !
-    !    Returns fraction of total number density that is Hydrogen, 
+    !    Returns fraction of total number density that is Hydrogen,
     !    Helium, and Oxygen.
     !-------------------------------------------------------------------------
     !
@@ -3263,9 +3265,9 @@ contains
     INTEGER(iprec), INTENT (IN) :: iflag, i_where
     !
     !------------------------------------------------------------------------
-    ! Given density and temperature on the rcm grid, ALAM channels, and the 
-    ! magnetic field on the rcm grid, this subroutine will compute ion and 
-    ! electron ETAs on the first grid points inside the boundary, by 
+    ! Given density and temperature on the rcm grid, ALAM channels, and the
+    ! magnetic field on the rcm grid, this subroutine will compute ion and
+    ! electron ETAs on the first grid points inside the boundary, by
     ! converting N and T into kappa-distributions.
     ! Before calling, you must have values of:
     !  * Re, pi
@@ -3279,7 +3281,7 @@ contains
     !
     ! At the moment (10/31/2005), the MHD moments passed into this subroutine are:
     ! density--mass density in amu (rho/m_p)/m3
-    ! temperature--P/(rho/m_p) in [eV], so temperature is essentially 
+    ! temperature--P/(rho/m_p) in [eV], so temperature is essentially
     !   energy density without 1.5 factor
     !------------------------------------------------------------------------
     !
@@ -3310,7 +3312,7 @@ contains
     kappa_e   = 6
     kappa_i   = 6
     !
-    !     
+    !
     ! If using the Young et al. composition model, calculate
     ! partial densities for H+, O+.
     if(NameCompModel .eq. "YOUNG")then
@@ -3435,7 +3437,7 @@ contains
     !     Electrons:
     !
     ie = 1; k_beg = kmin(ie)+1; k_end = kmax (ie)
-    ! SS: "+1" in the above line is to avoid counting k=1 (lowest) 
+    ! SS: "+1" in the above line is to avoid counting k=1 (lowest)
     !     electron energy channel, which is now reserved for the plasmasphere
     !     population.
     !
@@ -3510,7 +3512,7 @@ contains
     !             WRITE (UNIT_DEBUG+1,*) 'P RCM vs MHD: ',  pressure_rcm, temperature(i,j)*1.6E-4*density(i,j)
     !             WRITE (UNIT_DEBUG+1,*) 'LOCATION: ','I=',i,' J=',j
     !             DO k = 1, kcsize
-    !                WRITE (UNIT_DEBUG+1,*) k,eeta(i,j,k) 
+    !                WRITE (UNIT_DEBUG+1,*) k,eeta(i,j,k)
     !             END DO
     !            END IF
     !        END IF
@@ -3535,7 +3537,7 @@ contains
     ! out of MHD. This will also correct for possible errors in the nume-
     ! rical procedure that splits the distribution function into discrete
     ! energy channels. For the second reason, this procedure should be run
-    ! over all grid points, even if this routine is used for boundary 
+    ! over all grid points, even if this routine is used for boundary
     ! conditions only.
 
     Flag_correct_ok = .TRUE.
@@ -3555,7 +3557,7 @@ contains
 
              ! Before we start with this, a quick check if the original MHD
              ! density that RCM got is zero. If this is the case, temperature
-             ! is irrelevant and there should be nothing to correct, so skip 
+             ! is irrelevant and there should be nothing to correct, so skip
              ! the rest of the loop:
              if(.not. DoMultiFluidGMCoupling)then
                 IF (density(i,j) == 0.) THEN
@@ -3568,10 +3570,10 @@ contains
              end if
 
              ! Here start iterative process. We would like to apply the correction
-             ! procedure to all energy channels. However, because the correction 
+             ! procedure to all energy channels. However, because the correction
              ! factor is linear in energy, it is possible for it to become negative at high energies.
              ! It seems to happen for channels with flux-tube content of negligible (1.0E-9) fraction
-             ! of the peak value. It is safe to zero out those energy channels, but to do so and 
+             ! of the peak value. It is safe to zero out those energy channels, but to do so and
              ! preserve the algorithm, we need to iterate. We start with the whole distribution function
              ! (k_end = kmax) and if that includes problematic channels, we descend in energy while
              ! repeating procedure, until it works.
@@ -3605,7 +3607,7 @@ contains
                 WRITE (UNIT_DEBUG,'(/////)')
                 WRITE (UNIT_DEBUG,*) 'RCM, RCM_PLASMA_BC, ERROR OCCURED:'
                 WRITE (UNIT_DEBUG,*) 'CORRECTION FACTOR IS NEGATIVE AT SOME ENERGIES'
-                WRITE (UNIT_DEBUG,*) 'CORRECTION WILL NOT BE MADE FOR THIS SPECIES' 
+                WRITE (UNIT_DEBUG,*) 'CORRECTION WILL NOT BE MADE FOR THIS SPECIES'
                 WRITE (UNIT_DEBUG,*) 'THIS HAPPENED AT I=',i,' J=',j,'IE=',ie
                 WRITE (UNIT_DEBUG,*) 'S1*S3-S2**2=',s1*s3-s2*s2
                 WRITE (UNIT_DEBUG,*) 'a_factor=', a_factor
@@ -3649,7 +3651,7 @@ contains
                 WRITE (UNIT_DEBUG,*) 'a_factor=', a_factor
                 WRITE (UNIT_DEBUG,*) 'b_factor is too big?'
                 WRITE (UNIT_DEBUG,*) 'B_FACTOR=', b_factor
-                WRITE (UNIT_DEBUG,*) 'CORRECTION WILL NOT BE MADE FOR THIS SPECIES' 
+                WRITE (UNIT_DEBUG,*) 'CORRECTION WILL NOT BE MADE FOR THIS SPECIES'
                 WRITE (UNIT_DEBUG,*) 'THIS HAPPENED AT I=',i,' J=',j,'IE=',ie
                 WRITE(UNIT_DEBUG,*)'FOR THIS SPECIES, ENERGY RANGES ARE:',alamc(k_beg)*vm(i,j), alamc(kmax(ie))*vm(i,j),' eV'
                 WRITE(UNIT_DEBUG,*)' '
@@ -3682,7 +3684,7 @@ contains
                 WRITE (UNIT_DEBUG,*) imin_j
                 CLOSE (UNIT_DEBUG)
 
-                IF (s1*s3-s2*s2 < 0.01*s1*s3) THEN 
+                IF (s1*s3-s2*s2 < 0.01*s1*s3) THEN
                    ! Force no correction:
                    a_factor = 1.0
                    b_factor = 0.0
@@ -3782,7 +3784,7 @@ contains
                    WRITE (UNIT_DEBUG,*) 'LOCATION: ','I=',i,' J=',j, ' IMIN_J(J)=',imin_j(J)
                    WRITE (UNIT_DEBUG,*) ' '
                    DO k = 1, kcsize
-                      WRITE (UNIT_DEBUG,*) k,eeta(i,j,k) 
+                      WRITE (UNIT_DEBUG,*) k,eeta(i,j,k)
                    END DO
                    CLOSE (UNIT_DEBUG)
                    CALL CON_STOP ('RCM DEBUG: STOPPING')
@@ -3806,7 +3808,7 @@ contains
                 END IF
              END IF
           else
-             !MultiFluid                                                                                                                         
+             !MultiFluid
              densityHp_rcm = 0.0
              pressureHp_rcm = 0.
              densityOp_rcm = 0.0
@@ -3814,11 +3816,11 @@ contains
 
              do k=kmin(2),kmax(2)
                 densityHp_rcm = densityHp_rcm + (xmass(ikflavc(k))/xmass(2)) * (eeta(i,j,k)/6.37E+21) * vm(i,j)**1.5
-                pressureHp_rcm= pressureHp_rcm+ ((ABS(alamc(k))*eeta(i,j,k))*1.67E-20) * ((vm(i,j)**2.5)*1.0E-6) ! nPa                           
+                pressureHp_rcm= pressureHp_rcm+ ((ABS(alamc(k))*eeta(i,j,k))*1.67E-20) * ((vm(i,j)**2.5)*1.0E-6) ! nPa
              end do
              do k=kmin(3),kmax(3)
                 densityOp_rcm = densityOp_rcm + (xmass(ikflavc(k))/xmass(3)) * (eeta(i,j,k)/6.37E+21) * vm(i,j)**1.5
-                pressureOp_rcm= pressureOp_rcm+ ((ABS(alamc(k))*eeta(i,j,k))*1.67E-20) * ((vm(i,j)**2.5)*1.0E-6) ! nPa                           
+                pressureOp_rcm= pressureOp_rcm+ ((ABS(alamc(k))*eeta(i,j,k))*1.67E-20) * ((vm(i,j)**2.5)*1.0E-6) ! nPa
              end do
              IF (densityHp(i,j) /= 0.0 ) THEN
                 IF (ABS(densityHp_rcm-densityHp(i,j))/densityHp(i,j) > 0.01) THEN
@@ -4071,8 +4073,8 @@ contains
     !
     !     Compute Lambour et al refill rate for a given point at radial
     !     distance R that has flux tube content ETA_PT. The rate is
-    !     d(eta)/dt = (ETA_sat - Eta_pt) / tau, where ETA_sat is the 
-    !     saturated plasmasphere density, Eta_pt is current density, and 
+    !     d(eta)/dt = (ETA_sat - Eta_pt) / tau, where ETA_sat is the
+    !     saturated plasmasphere density, Eta_pt is current density, and
     !     tau is the refilling time constant interpolated to given radial
     !     distance for given conditions. Rate is positive, but in the rcm
     !     advection scheme must be negative since this is treated as a loss term.
@@ -4290,7 +4292,7 @@ contains
     ! Carpenter_and_Anderson_JGR_1992 saturated plasmaspheric density in cm-3
     ! as a function of radial distance, day of year, and mean monthly sunspot
     ! number. Reduced by 5% following Lambour (accounting for ISEE-1 off-equat
-    ! location?) 
+    ! location?)
     ! Valid earthward of the plasmaspheric trough.
     !
     REAL (rprec), INTENT (IN) :: r, doy, sunspot_number
@@ -4327,7 +4329,7 @@ contains
        CALL Rcm_plasma_bc (i_eta_bc, 1)
     ELSE IF (i_eta_bc == 3) THEN
        CALL Rcm_plasma_bc (i_eta_bc, 1)
-    ELSE 
+    ELSE
        call CON_stop('ERROR in IM/RCM2/src/rcm_comput.f90:'// &
             'ILLEGAL VALUE OF I_eta_bc')
     END IF
@@ -4355,15 +4357,15 @@ contains
   END SUBROUTINE Comput
   !
   !
-  !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   !
   !
   SUBROUTINE Interp_by_marktimes (nmax, mark_times, mark_values, jtime, value)
 
     INTEGER (iprec), INTENT (IN) :: nmax, jtime, mark_times(nmax)
-    REAL (rprec), INTENT (IN)  :: mark_values (nmax) 
+    REAL (rprec), INTENT (IN)  :: mark_values (nmax)
     REAL (rprec), INTENT (OUT) :: value
-    !                                                                       
+    !
     !-------------------------------------------------------------
     !     Subroutine to interpolate an input value using "marktimes".
     !     Used to get polar cap potential drop, its "phase", Kp, etc.
@@ -4375,16 +4377,16 @@ contains
     INTEGER (iprec) :: n
     REAL (rprec)    :: f
     !
-    DO n = 1, nmax 
-       IF (jtime <= mark_times (n) ) THEN 
-          IF (n == 1) THEN 
+    DO n = 1, nmax
+       IF (jtime <= mark_times (n) ) THEN
+          IF (n == 1) THEN
              value = mark_values (1)
-             RETURN 
-          ELSE 
+             RETURN
+          ELSE
              f = REAL(jtime-mark_times(n-1),rprec) / &
                   REAL(mark_times(n)-mark_times(n-1), rprec)
              value = (1.0_rprec - f) * mark_values(n-1) + f * mark_values(n)
-             RETURN 
+             RETURN
           END IF
        END IF
     END DO
@@ -4403,19 +4405,19 @@ contains
     !
     !__________________________________________________________________________
     !
-    !     Subroutine to find magnetic field arrays r,p,be and vm 
-    !     at time itime by interpolating in time between 
+    !     Subroutine to find magnetic field arrays r,p,be and vm
+    !     at time itime by interpolating in time between
     !     precomputed magnetic field
     !     models.  nbf is the number of precomputed bfield models
     !     and ibtime is a vector giving the event times associated
     !     with each of the models.
     !
     !     rws   3/19/97; stanislav 5/01/98
-    !    
+    !
     !     Stanislav: nold_bf is initialized to 0; this is actually
-    !     enough to "save" its value, but just in case add SAVE 
-    !     attribute. nold_bf is 
-    !     incremented by 1 only when the appropriate sets of 
+    !     enough to "save" its value, but just in case add SAVE
+    !     attribute. nold_bf is
+    !     incremented by 1 only when the appropriate sets of
     !     B-models are read in from the files for interpolation;
     !     "appropriate" here is:
     !      | first B-model if itime <= ibtime(1)
@@ -4481,7 +4483,7 @@ contains
              nold_bf   = nbf + 1
           END IF
           !
-       ELSE 
+       ELSE
 
           nn = -999
           find_loop: DO n = 2, nbf
@@ -4579,7 +4581,7 @@ contains
        !
        etac = etac_inp (:,n_t)
        !
-    ELSE 
+    ELSE
        nn = -999
        find_loop: DO n = 2, n_t
           IF (jtime <= itime_etac(n)) THEN
@@ -4873,7 +4875,7 @@ contains
              if (vm(i,j) <= 0.0) then
                 call CON_stop('ERROR in IM/RCM2/src/rcm_comput.f90:&
                      &open field lines are not expected here')
-             else if (i == 2) then 
+             else if (i == 2) then
                 imin_j(j) = i
                 bndloc(j) = i
                 EXIT do_i_loop
@@ -4894,7 +4896,7 @@ contains
     CASE DEFAULT
 
        call CON_stop('ERROR in IM/RCM2/src/rcm_comput.f90:'// &
-            'ILLEGAL VALUE OF IBND_TYPE') 
+            'ILLEGAL VALUE OF IBND_TYPE')
 
     END SELECT
 
@@ -4922,20 +4924,20 @@ contains
     use Rcm_variables, junk_ss => ss
 
     INTEGER (iprec), INTENT (IN) :: jtime
-    !                                                                       
-    !  Program written by: r.w. spiro        
+    !
+    !  Program written by: r.w. spiro
     !  last update:
-    !     04-05-88          
+    !     04-05-88
     !     01-29-96 frt                 - added ain,min_j arr
-    !  Algorithm by: r.a. wolf                                              
-    !                                                                       
+    !  Algorithm by: r.a. wolf
+    !
     !  This subroutine computes birk(i,j) given inner edge
-    !  locations 
-    !  modified 04-05-88 to include effects of gradients in eta.            
-    !  see raw document re including eeta in computation of jbirk           
-    !    dated feb 6, 1988.                                                 
+    !  locations
+    !  modified 04-05-88 to include effects of gradients in eta.
+    !  see raw document re including eeta in computation of jbirk
+    !    dated feb 6, 1988.
     !  birk is current density (2 hemispheres) in units of
-    !  microamp/m**2    
+    !  microamp/m**2
     !
     !  birk(i,j) here is the field-aligned current density per
     !  unit of ionospheric area, so that it already includes
@@ -4945,11 +4947,11 @@ contains
     !  Issues with non-integer boundary (Stanislav's notes):
     !  for BIRK from inner edge segments, this is not an issue
     !  (except that if a segment is entirely outside the bndry,
-    !  then we don't compute its contribution); of course, we 
-    !  have to care about this somewhere else where motion of 
-    !  test particles is computed. For BIRK from gradients of 
-    !  EETA,  
-    !                                                                       
+    !  then we don't compute its contribution); of course, we
+    !  have to care about this somewhere else where motion of
+    !  test particles is computed. For BIRK from gradients of
+    !  EETA,
+    !
     REAL (rprec), PARAMETER :: cf1 = 1.0_rprec / pi_two, &
          cf2 =  - (3.0_rprec/4.0_rprec)*( (2.0_rprec / pi) - 0.5_rprec)
     !
@@ -4963,7 +4965,7 @@ contains
          vmkl, vmnext, sum, b1, b2, x, y, el, umax, umin, ss, &
          z, dg1, dg2, dg3, qmin, qmax, qn, qx,  &
          denom, a1, a2, bjm, range, bim, gkl (5000)
-    !                                                                       
+    !
     !
     birk  = 0.0_rprec
     !
@@ -4971,21 +4973,21 @@ contains
        !
        IF (ABS(eta(k)) < TINY(1.0_rprec)) CYCLE DO_20  ! in case edge is "empty"
        !
-       klbeg = mpoint (k) 
-       klend = klbeg + npoint (k) - 1 
-       !                                                                       
+       klbeg = mpoint (k)
+       klend = klbeg + npoint (k) - 1
+       !
        vmnext = Gntrp_2d (vm,  isize, jsize, bi (klbeg), bj (klbeg))
-       !                                                                       
+       !
        !
        DO_30: DO kl = klbeg, klend   ! goes over pts on edge K
           !
-          vmkl = vmnext 
-          klnext = KL + 1 
-          IF (klnext > klend) klnext = klbeg 
+          vmkl = vmnext
+          klnext = KL + 1
+          IF (klnext > klend) klnext = klbeg
           vmnext = Gntrp_2d (vm, isize, jsize, bi (klnext), bj (klnext))
-          !                                                             
           !
-          !         Determine nearby grid pts:                                   
+          !
+          !         Determine nearby grid pts:
           !
           ib1   = INT (bi (kl))
           ib2   = INT (bi (klnext))
@@ -4996,115 +4998,115 @@ contains
           IF (ibmax       <= 1                     .OR. &
                (bi(kl)     <= Bndy (bndloc, jsize, bj(kl)) .OR. &
                bi(klnext) <= Bndy (bndloc, jsize, bj (klnext) ) )) CYCLE DO_30
-          !                                                                       
+          !
           !
           CALL Adjust_bj_2 (bj (kl), bj (klnext), b1, b2 )
-          jb1 = b1 
-          jb2 = b2 
-          jbmin = MIN (jb1, jb2) 
-          jbmax = MAX (jb1 + 1, jb2 + 1) 
+          jb1 = b1
+          jb2 = b2
+          jbmin = MIN (jb1, jb2)
+          jbmax = MAX (jb1 + 1, jb2 + 1)
           !
           sum = 0.0_rprec
-          ig = 0 
-          !                                                                       
+          ig = 0
+          !
           !
           !
           DO i = ibmin, ibmax ! loop over all nearby grid points
-             DO j = jbmin, jbmax 
+             DO j = jbmin, jbmax
                 !
-                ig = ig + 1 
+                ig = ig + 1
                 IF (ig > SIZE(gkl)) THEN
                    WRITE (*,'(T2,A)') 'JBIRK: ig.gt.igdim'
                    call CON_stop('ERROR in IM/RCM2/src/rcm_comput.f90')
                 END IF
                 !
                 !           Consider straight line  bi=a1*bj+a2
-                !                                                                       
-                denom = b1 - b2 
+                !
+                denom = b1 - b2
                 IF (ABS (denom) < 1E-5) denom = b1-b2-1E-5
                 !
                 !           slope=a1; intercept=a2:
-                a1 = (bi (kl) - bi (klnext) ) / denom  
-                a2 = (b1 * bi (klnext) - bi (kl) * b2) / denom   
-                !                                                                       
+                a1 = (bi (kl) - bi (klnext) ) / denom
+                a2 = (b1 * bi (klnext) - bi (kl) * b2) / denom
+                !
                 !
                 !           bjm= j value of point that is closest to (i,j)
                 !           and lies on the line that passes through kl and klnext:
-                !                                                                       
+                !
                 bjm = (j - a1 * (a2 - i) ) / (1.0_rprec + a1**2)
-                !                                                                       
-                !           gkl(ig)="nearness parameter" used to compute             
-                !              weighting factors for nearby grid points              
-                !                                                                       
-                !           Let                                                      
+                !
+                !           gkl(ig)="nearness parameter" used to compute
+                !              weighting factors for nearby grid points
+                !
+                !           Let
                 !           l = infinitely long straight line thru points kl, klnext.
-                !           p = point on line l that is closest to grid point i,j.   
-                !           x = distance from p to midpoint of segment (kl,klnext).  
-                !           y = distance from p to grid point (i,j).                 
-                !           el = length of segment (kl, klnext).                     
-                !                                                                       
-                !           j parallel from the segment is distributed among         
+                !           p = point on line l that is closest to grid point i,j.
+                !           x = distance from p to midpoint of segment (kl,klnext).
+                !           y = distance from p to grid point (i,j).
+                !           el = length of segment (kl, klnext).
+                !
+                !           j parallel from the segment is distributed among
                 !           grid points that are within distance 'range' of segment.
-                !                                                                       
-                !           bim = bi-value on line l that corresponds to bj=bjm.     
-                !                                                                       
+                !
+                !           bim = bi-value on line l that corresponds to bj=bjm.
+                !
                 range = 1.0_rprec
-                bim = a1 * bjm + a2 
+                bim = a1 * bjm + a2
                 x  = (SQRT((bim - 0.5 * (bi(kl)+bi(klnext)))**2 + &
                      (bjm - 0.5 * (b1+b2))**2) ) / range
                 y  = (SQRT((REAL(i,rprec)-bim)**2+(REAL(j,rprec)-bjm)**2))/range
                 el = (SQRT((bi(klnext)-bi(kl))**2+(b1-b2)**2))/range
-                !                                                                       
+                !
                 IF (y >= 1.0_rprec) THEN
                    umax = 0.0_rprec
                    umin = 0.0_rprec
-                ELSE 
+                ELSE
                    ss   = SQRT (1.0_rprec - y**2)
                    umax = MIN ( (0.5 * el - x), ss)
                    umin = MAX ( ( -0.5 * el - x), - ss)
                    z    = MAX (y, 0.00001_rprec)
                 END IF
-                !                                                                       
-                IF (umax <= umin) THEN 
+                !
+                IF (umax <= umin) THEN
                    gkl (ig) = 0.0_rprec
-                ELSE 
+                ELSE
                    dg1 = cf1 * ( &
                         -umax*LOG(umax**2 + z**2) + umin * LOG (umin**2 + z**2) &
                         + 2.0_rprec*(umax - umin) - &
                         2.0_rprec*y*(ATAN (umax/z) - ATAN (umin/z)))
-                   !                                                                       
+                   !
                    dg2 = cf2 * ( &
                         (1.0_rprec - y**2) * (umax - umin) - (umax**3 - umin**3) / 3.0)
-                   !                                                                       
+                   !
                    qmax = MAX (0.0_rprec, 1.0_rprec - y**2 - umax**2)
                    qmin = MAX (0.0_rprec, 1.0_rprec - y**2 - umin**2)
                    IF (ss <= 0.0_rprec)  ss = 1.0E-6
-                   qx = umax / ss 
+                   qx = umax / ss
                    IF (ABS (qx) > 1.0_rprec) qx = SIGN (1.0_rprec, qx)
-                   qn = umin / ss 
+                   qn = umin / ss
                    IF (ABS(qn) >  1.0_rprec) qn = SIGN (1.0_rprec, qn)
                    dg3 = cf1 * (umax * SQRT (qmax) - umin * SQRT (qmin) &
                         + ss**2 * (ASIN (qx) - ASIN (qn) ) )
-                   gkl (ig) = dg1 + dg2 + dg3 
+                   gkl (ig) = dg1 + dg2 + dg3
                 END IF
-                !                                                                       
-                IF (gkl (ig) < 0.) then 
+                !
+                IF (gkl (ig) < 0.) then
                    !!7/13/99      WRITE (*,'(A,E10.2,4I5)') &
                    !!7/13/99     'gkl negative. gkl,ig,i,j,k =',gkl(ig),ig,i,j,k
                 END IF
                 !
-                sum = sum + gkl (ig) 
-                !                                                                       
+                sum = sum + gkl (ig)
+                !
              END DO
           END DO
-          !                                                                       
-          IF (ABS(sum) < TINY(1.0_rprec)) CYCLE DO_30
-          ig = 0 
           !
-          DO i = ibmin, ibmax 
-             DO jindex = jbmin, jbmax 
-                ig = ig + 1 
-                j = jindex 
+          IF (ABS(sum) < TINY(1.0_rprec)) CYCLE DO_30
+          ig = 0
+          !
+          DO i = ibmin, ibmax
+             DO jindex = jbmin, jbmax
+                ig = ig + 1
+                j = jindex
                 !
                 jj = Bjmod_int (j, jsize)
                 !
@@ -5116,28 +5118,28 @@ contains
                         eta(k) * ABS(alam(k))*sgn(k)* &
                         (gkl (ig) / sum) / &
                         (alpha (i, jj) * beta (i, jj) * dlam * dpsi * ri**2)
-                   !                                                                       
+                   !
                    !              Birkeland current caused by the centrifugal force here:
                    !              dbirk = dbirk -  &
                    !                      0.5e6*signbe*romeca**2.0* &
-                   !                      (rnext-rkl)*(rnext+rkl)* 
-                   !                      xmass(ikflav(k))*eta(k)*sgn(k)*(gkl(ig)/sum)/ 
+                   !                      (rnext-rkl)*(rnext+rkl)*
+                   !                      xmass(ikflav(k))*eta(k)*sgn(k)*(gkl(ig)/sum)/
                    !                      (alpha(i,jj)*beta(i,jj)*dlam*dpsi)
                    !
-                   birk (i, jj) = birk (i, jj) + dbirk 
+                   birk (i, jj) = birk (i, jj) + dbirk
                    !
                 END IF
              END DO
           END DO
-          !                                                                       
+          !
        END DO DO_30
     END DO DO_20
-    !                                                                       
+    !
     !
     !
     !
     !     Compute J_parallel due to continuous channel:
-    !                                                                       
+    !
     CALL Deriv_i (vm, isize, jsize, imin_j, dvmdi)
     CALL Deriv_j (vm, isize, jsize, imin_j, 1.0D+25, dvmdj)
     WHERE (ABS(dvmdj) > 1.0E+24)  ! to prevent artificial inflows on bndy
@@ -5159,7 +5161,7 @@ contains
              dbirk  = charge_e * signbe * ABS(alamc(kc)) * &
                   (detadj(i,j) * dvmdi(i,j) - detadi(i,j) * dvmdj(i,j)) /  &
                   (alpha(i,j)*beta(i,j)*dlam*dpsi*Ri**2)
-             birk (i, j) = birk (i, j) + dbirk 
+             birk (i, j) = birk (i, j) + dbirk
           END DO
        END DO
     END DO
@@ -5174,14 +5176,14 @@ contains
   !
   SUBROUTINE Get_vparallel ()
 
-    !  last update: 
-    !     05-05-87       by:rws                              
-    !     02-10-96          frt - added arrays ain,min_j     
-    !                                                                       
-    !  Birk is sum of current densities into both hemispheres.              
-    !  (micro amp/m**2).  Before activating parallel potential drop        
+    !  last update:
+    !     05-05-87       by:rws
+    !     02-10-96          frt - added arrays ain,min_j
+    !
+    !  Birk is sum of current densities into both hemispheres.
+    !  (micro amp/m**2).  Before activating parallel potential drop
     !  we need to check if birk is being used correctly in
-    !  this routine.   
+    !  this routine.
     !
     !  Stanislav: VPAR is computed inside IE loop (for both
     !             negative and positive particles), and will
@@ -5206,12 +5208,12 @@ contains
     !
     INTEGER (iprec) :: i, j, ie, iedim_local, kc
     REAL (rprec)    :: en, ekt, therm, sum1 (iesize), sum2 (iesize)
-    !                                                                       
     !
-    !                                  
+    !
+    !
     iedim_local = 1
     !
-    vpar  (:,:)   = 0.0_rprec 
+    vpar  (:,:)   = 0.0_rprec
     eavg  (:,:,:) = 0.0_rprec
     eflux (:,:,:) = 0.0_rprec
     !
@@ -5233,9 +5235,9 @@ contains
              IF (fudgec(kc) == 0.0) CYCLE
              IF ( ABS(alamc(kc))*vm(i,j) > 500.0_rprec) THEN
                 IF (alamc (kc) < 0.0_rprec) THEN
-                   ie = 1 
-                ELSE 
-                   ie = 2 
+                   ie = 1
+                ELSE
+                   ie = 2
                    !                 STOP 'BALGN4: ie is 2'
                 END IF
                 sum1(ie) = sum1(ie) + eeta(i,j,kc)*fudgec(kc)
@@ -5247,27 +5249,27 @@ contains
           !           compute precipitating number flux, average energy,
           !           and parallel potential drop:
           !
-          DO ie = 1, iedim_local 
-             !                                                                       
+          DO ie = 1, iedim_local
+             !
              IF (sum1 (ie) > 0.0_rprec) THEN
                 !
                 !                compute thermal electron current, field-aligned
                 !                potential drop, electron energy flux,
-                !                and average electron energy at (i,j):          
+                !                and average electron energy at (i,j):
                 !
                 en    = sum1 (ie) * vm (i, j)**1.5 / 6.38E+21
                 ekt   = (2.0_rprec/3.0_rprec) * sum2 (ie) * vm (i,j) / sum1 (ie)
                 therm = 0.02675 * en * SQRT(ekt*xmass(1)/xmass(ie))
                 !
-                IF (therm < 1.E-30) THEN 
+                IF (therm < 1.E-30) THEN
                    therm      = 0.0_rprec
                    vpar (i,j) = 0.0_rprec
                    eflux(i,j,ie) = 0.0_rprec
                    eavg(i,j,ie) = 1000.
-                ELSE 
+                ELSE
                    IF (- birk (i, j) / therm > 1.0_rprec ) THEN
                       vpar (i,j) = ekt * (- birk (i,j) / therm - 1.0_rprec)
-                   ELSE 
+                   ELSE
                       vpar (i,j) = 1.0_rprec
                    END IF
                    vpar(i,j) = MIN (vpar (i, j), 10000.0_rprec)
@@ -5283,15 +5285,15 @@ contains
                         vpar(i,j)+0.5*vpar(i,j)**2 /ekt) / &
                         (1.0_rprec + vpar (i, j) / ekt)
                 END IF
-             ELSE 
-                !                                                                       
+             ELSE
+                !
                 !                 Case fudge=0: we want eflux=0 and eavg=0 for no precipitation.
                 !
                 eflux (i, j, ie) = 0.0_rprec
                 eavg  (i, j, ie) = 0.0_rprec
                 !
              END IF
-             !                                                                       
+             !
           END DO
           !
        END DO loop_i
@@ -5413,7 +5415,7 @@ contains
   SUBROUTINE Get_hardy_cond ()
 
     INTEGER (iprec) :: i,j, kp_low, kp_high
-    REAL    (rprec) :: value, value_low, value_high, factor 
+    REAL    (rprec) :: value, value_low, value_high, factor
     !
     kp_low = INT (kp)
     kp_high = kp_low + 1
@@ -5448,16 +5450,16 @@ contains
   SUBROUTINE Get_active_cond ( )
 
     !  This subroutine calculates conductance enhancement
-    !  due to auroral electron precipitation and adds this 
-    !  to the quiet time conductances read in subroutine 
-    !  qtcond. This subroutine contains changes made for 
-    !  tjfr run and corrected formulas for conductances 
-    !  as put forth by robinson         
-    !  last update: 11-06-86                                                
-    !               02-07-96 frt - min_j array added                        
-    !                                                                       
+    !  due to auroral electron precipitation and adds this
+    !  to the quiet time conductances read in subroutine
+    !  qtcond. This subroutine contains changes made for
+    !  tjfr run and corrected formulas for conductances
+    !  as put forth by robinson
+    !  last update: 11-06-86
+    !               02-07-96 frt - min_j array added
+    !
     !  Stanislav, april 14 1999: added arrays for precipitation
-    !             conductances so that they are smoothed and 
+    !             conductances so that they are smoothed and
     !             quiet-time conductances are not modified.
     !             This was also accompanied by a change in BALGN4
     !             that now runs from i = 1 not min_j.
@@ -5501,7 +5503,7 @@ contains
     CALL Smooth_j (pedpsi)
     CALL Smooth_j (pedlam)
     CALL Smooth_j (hall)
-    !                                                                       
+    !
     CALL Smooth_i (pedpsi)
     CALL Smooth_i (pedlam)
     CALL Smooth_i (hall)
@@ -5588,75 +5590,75 @@ contains
 
   !==========================================================================
 
-  SUBROUTINE Comput_Coeff 
+  SUBROUTINE Comput_Coeff
 
-    ! code based on subroutine coeff in spiro.agu83.fort         
-    ! last update 06-25-85 by rws                                
-    !              02-07-96 frt                                 
+    ! code based on subroutine coeff in spiro.agu83.fort
+    ! last update 06-25-85 by rws
+    !              02-07-96 frt
     !                - min_j replaced imin and min_j+1 replaces i1
     !
-    ! This subroutine computes the coefficients of the 
-    ! discretized PDE of MI coupling, except for the  
+    ! This subroutine computes the coefficients of the
+    ! discretized PDE of MI coupling, except for the
     ! inhomogenious term. Formulas are from Jaggi and Wolf 1973
-    ! JGR paper. The discretized PDE for the electrostatic 
+    ! JGR paper. The discretized PDE for the electrostatic
     ! potential looks like:
     !
     ! V(i,j) = C1(i,j)*V(i+1,j) + C2(i,j)*V(i-1,j)
     !        + C3(i,j)*V(i,j+1) + C4(i,j)*V(i,j-1) + C5(i,j)
-    !         
+    !
     ! This subroutine computes the coefficients for grid
     ! points that are inside the high-latitude boundary
     ! as defined by MIN_J array; that is, for all points (i,j)
     ! such that i <= min_j(j). If the boundary is non-integer,
     ! then some coefficients will have to be modified. c1-c5
-    ! will be recomputed in subroutine CASE3; however, that 
+    ! will be recomputed in subroutine CASE3; however, that
     ! subroutine requires that arrays A, B, and D be computed
     ! here and be available in CASE3 for all I values.
     !
     ! STANISLAV: if the boundary coincides with an integer
-    !            I-value, then this subroutine computes 
+    !            I-value, then this subroutine computes
     !            coefficients for i = imin+1 to i=imax.
     !            It does not compute the coefficients at
     !            i = imin because we don't use the difference
     !            equations there, but rather the Dirichlet
-    !            boundary condtion (value of V). 
-    !            On the row just inside of the boundary 
+    !            boundary condtion (value of V).
+    !            On the row just inside of the boundary
     !            (i = imin + 1), we approximate first deri-
     !            vatives in I by a 2-point forward difference
     !            rather than 3-pt. This leads to a O(dlam)
-    !            accuracy approximation (compared to 
+    !            accuracy approximation (compared to
     !            (O(dlam**2)) for other points, but this is
     !            due to the conductivities changing sharply
     !            (edge of auroral zone!), so the 2-pt diff
-    !            may simply be not representative of the 
+    !            may simply be not representative of the
     !            derivative in question.
     !
     !-----------------------------------------------------------
-    !                                                             
-    !                                                            
+    !
+    !
     !   this subroutine computes the coefficients c1,c2,c3 & c4.
     !   these are coefficients of the elliptic magnetosphere-
     !   ionosphere coupling  equation that is solved in potent.
-    !   computed values  of the coeffecients are stored in array c.  
-    !                                                             
-    !   this subroutine called from subroutine comput           
+    !   computed values  of the coeffecients are stored in array c.
+    !
+    !   this subroutine called from subroutine comput
     !
     !______________________________________________________________________________
     !
     INTEGER (iprec) :: i,j,k
     REAL (rprec) :: aa, bb, cc, dd, ee, ff, b_min, bc, hmin, hc, &
          a (isize,jsize), b (isize,jsize), d (isize,jsize)
-    !                                                         
+    !
     c_pde (:,:,:) = 0.0_rprec
-    !                                                          
+    !
     DO j = 1, jsize, jint
        DO i = 1, isize, iint
-          a (i, j) = alpha (i, j) * pedpsi (i, j) / beta  (i, j) 
-          b (i, j) = beta  (i, j) * pedlam (i, j) / alpha (i, j) 
+          a (i, j) = alpha (i, j) * pedpsi (i, j) / beta  (i, j)
+          b (i, j) = beta  (i, j) * pedlam (i, j) / alpha (i, j)
           d (i, j) = 2.0_rprec * ( b(i, j) / dlam**2 + a(i, j) / dpsi**2 )
        END DO
     END DO
-    !                                                        
+    !
     loop_30: DO  j = j1, j2, jint
        Loop_20: DO  i = imin_j(j), isize, iint
           !
@@ -5703,25 +5705,25 @@ contains
              END IF
              !
           END IF
-          !                                                         
+          !
           cc = hall (i, j + jint) - hall (i, j - jint)
-          cc = cc * signbe 
+          cc = cc * signbe
           dd = (bb - cc * dlam / dpsi) * 0.25_rprec
-          aa = a (i, j + jint) - a (i, j - jint) 
+          aa = a (i, j + jint) - a (i, j - jint)
           ff = (aa + ee * dpsi / dlam) * 0.25_rprec
-          c_pde (1, i, j) = (b (i, j) + dd) / (d (i, j) * dlam**2) 
-          c_pde (2, i, j) = (b (i, j) - dd) / (d (i, j) * dlam**2) 
-          c_pde (3, i, j) = (a (i, j) + ff) / (d (i, j) * dpsi**2) 
-          c_pde (4, i, j) = (a (i, j) - ff) / (d (i, j) * dpsi**2) 
+          c_pde (1, i, j) = (b (i, j) + dd) / (d (i, j) * dlam**2)
+          c_pde (2, i, j) = (b (i, j) - dd) / (d (i, j) * dlam**2)
+          c_pde (3, i, j) = (a (i, j) + ff) / (d (i, j) * dpsi**2)
+          c_pde (4, i, j) = (a (i, j) - ff) / (d (i, j) * dpsi**2)
           !
        END DO loop_20
     END DO loop_30
 
     DO i = 1, isize
        DO k = 1, ncoeff
-          c_pde (k, i, j1 - 2) = c_pde (k, i, j2 - 1) 
-          c_pde (k, i, j1 - 1) = c_pde (k, i, j2) 
-          c_pde (k, i, j2 + 1) = c_pde (k, i, j1) 
+          c_pde (k, i, j1 - 2) = c_pde (k, i, j2 - 1)
+          c_pde (k, i, j1 - 1) = c_pde (k, i, j2)
+          c_pde (k, i, j2 + 1) = c_pde (k, i, j1)
        END DO
     END DO
 
@@ -5732,7 +5734,7 @@ contains
   !
   !
   SUBROUTINE Comput_C5_wind
-    !                                                                       
+    !
     INTEGER (iprec) :: i, j
     REAL (rprec) :: th, th0, th1, th2, dth, dph, denom, dr0, dr1, dr2, &
          djre, dp1, dp2, denom1, denom2, djph, dw (isize,jsize)
@@ -5740,9 +5742,9 @@ contains
 
     !
     !
-    !     1. If iwind=0, c5w(i,j) is set equal to zero and                  
-    !        subroutine returns to calling program.       
-    !                                                                       
+    !     1. If iwind=0, c5w(i,j) is set equal to zero and
+    !        subroutine returns to calling program.
+    !
     !
     IF (iwind == 0) THEN
        c5w (:,:) = 0.0_rprec
@@ -5752,16 +5754,16 @@ contains
             'wind is not implemented yet')
     END IF
     !
-    !                                                                       
-    !     2. If iwind.ne.0, calculation of c5w(i,j) in volts.               
-    !        Discretization of the rhs of div*(s*e)=birk-div*jw 
-    !        yields a term dw(i,j)*v(i,j). Then 
-    !        c5w(i,j)=-div*jw/dw(i,j).    
+    !
+    !     2. If iwind.ne.0, calculation of c5w(i,j) in volts.
+    !        Discretization of the rhs of div*(s*e)=birk-div*jw
+    !        yields a term dw(i,j)*v(i,j). Then
+    !        c5w(i,j)=-div*jw/dw(i,j).
     !        jw=part of ionospheric current due to action of
-    !        thermospheric winds.       
-    !                                                                       
-    !     2.1 calculation of dw(i,j)                                        
-    !                                                 
+    !        thermospheric winds.
+    !
+    !     2.1 calculation of dw(i,j)
+    !
     DO j = j1, j2, jint
        DO i = CEILING(bndloc(j))+1, isize
           th = colat (i, j)
@@ -5777,23 +5779,23 @@ contains
           END IF
           dph = 0.5*(aloct(i,j+1) - aloct(i,j-1))
           IF (dph < 0.0_rprec) dph = dph + pi
-          !                                                                       
+          !
           dw (i, j) = 2.0_rprec /ri*( &
                2.0_rprec*COS(th)*pedlam(i,j) / SIN(th)**2 / dth**2 + &
                SIN(th)**2*pedpsi(i,j) / (2.0_rprec*COS(th) ) / dph**2)
        END DO
     END DO
-    !                                                                       
-    !     2.2  calculation of -div*jw. meridional component.                
-    !        div*jw is multiplied by 1.e-6 to express bir in teslas.        
+    !
+    !     2.2  calculation of -div*jw. meridional component.
+    !        div*jw is multiplied by 1.e-6 to express bir in teslas.
     !
     DO j = j1, j2, jint
        DO i = CEILING(bndloc(j))+1, isize
           IF (i == isize) THEN
-             !                                                                       
+             !
              !        2.2.1 meridional part at i=imax. derivative is approximated
              !              by a 3-point forward difference formula.
-             !                                                                       
+             !
              th0 = pi_by_two - colat (i, j)
              th1 = pi_by_two - colat (i - 1, j)
              th2 = pi_by_two - colat (i - 2, j)
@@ -5812,33 +5814,33 @@ contains
              dr2 = cos (th2) * bnorm * bir (i - 2, j) * ( &
                   pedlam(i-2,j)*pwe(i-2,j) + &
                   signbe * hall (i-2,j) * hwn (i-2,j))
-             !                                                                       
+             !
              djre = - (dr2 - 4.0 * dr1 + 3. * dr0) / denom
-             !                                                                       
+             !
           ELSE
-             !                                                                       
+             !
              !           2.2.2 meridional part at i.lt.imax. derivative is
              !                 approximated by central differences.
-             !                                                                       
+             !
              th1    = colat (i - 1, j)
              th2    = colat (i + 1, j)
              dth    = 0.5*(1.0_rprec / sin (th1)**2 - 1.0_rprec / sin (th2)**2)
              denom1 = 2.0_rprec * dth
-             !                                                                       
+             !
              dr2    = bnorm * bir(i-1,j) * sin(th1) * &
                   ( pedlam (i-1,j) * pwe(i-1,j) + &
                   hall(i-1,j) * hwn(i-1,j) * signbe )
-             !                                                                       
+             !
              dr1 = bnorm * bir (i + 1, j) * sin (th2) * &
                   ( pedlam (i + 1, j) * pwe (i + 1, j) + &
                   signbe * hall (i + 1, j) * hwn (i + 1, j) )
-             !                                                                       
+             !
              djre = (dr2 - dr1) / denom1
           END IF
           !
           !        2.2.3 zonal part.derivative is approximated by
           !              central differences.
-          !                                                                       
+          !
           th1 = colat (i, j - 1)
           th2 = colat (i, j + 1)
           dph = 0.5 * (aloct (i, j + 1) - aloct (i, j - 1) )
@@ -5852,7 +5854,7 @@ contains
                (hall(i,j-1) * hwe(i,j-1) - pedpsi(i,j-1) * pwn(i,j-1))
           !
           !        end of change for inserting "signbe" on 7/26/90
-          !                                                                       
+          !
           djph = (dp2 - dp1) / denom2
           c5w (i, j) = - (djre+djph) / dw (i, j)
        END DO
@@ -5870,14 +5872,14 @@ contains
 
     INTEGER (iprec) :: i,j
     REAL (rprec)    :: d
-    !                                                                       
+    !
     DO j = 1, jsize
        DO i = imin_j(j), isize
           d = 2.0_rprec * ( beta(i,j)  * pedlam(i,j) / (alpha(i,j) * dlam**2)  &
                + alpha(i,j) * pedpsi(i,j) / (beta(i,j) *  dpsi**2) )
           IF (d <= 1.0e-30_rprec) THEN
              c_pde (5, i, j) = 0.0_rprec
-          ELSE 
+          ELSE
              c_pde (5, i, j) = alpha(i,j) * beta(i,j) * (ri**2) * birk(i,j) / d + &
                   c5w(i,j)
           END IF
@@ -5892,38 +5894,38 @@ contains
   !
   SUBROUTINE Comput_lowlat_boundary
 
-    !  last update| 08-27-86        written by| g.a.mantjoukis     
-    !                                                                       
-    !  subroutine to compute equatorial bndy condition.based on             
-    !   mantjou.eqbndy.text                                                 
-    !                                                                       
-    !  current conservation requires that at i=imax,                        
+    !  last update| 08-27-86        written by| g.a.mantjoukis
+    !
+    !  subroutine to compute equatorial bndy condition.based on
+    !   mantjou.eqbndy.text
+    !
+    !  current conservation requires that at i=imax,
     !  v(imax,j)=c(1,imax,j)*v(imax+1,j)
-    !           +c(2,imax,j)*v(imax-1,j)            
+    !           +c(2,imax,j)*v(imax-1,j)
     !           +c(3,imax,j)*v(imax,j+1)
     !           +c(4,imax,j)*v(imax,j-1)
     !           +c(5,imax,j)
-    !  where v(imax+1,j) is outside the modeling region.                    
-    !                                                                       
+    !  where v(imax+1,j) is outside the modeling region.
+    !
     !  the equatorial bndy condition gives an expression for
     !  v(imax+1,j) in terms of quantities inside the modeling
-    !  region and is of the form    
+    !  region and is of the form
     !  v(imax+1,j)=ceq1*v(imax,j-1)+ceq2*v(imax,j)
-    !             +ceq3*v(imax,j+1)+ceq4*v(imax-1,j)+ceq5    
-    !  where ceq1 through ceq5 are calculated below.                        
-    !                                                                       
-    !  ss(j) is a cowling-type conductance (see mantjou.eqbndy.text)        
-    !       integrated over the cross-section of the equatorial band,at     
-    !       any given local time.                                           
-    !                                                                       
-    !  sw(j) is a wind-dependent quantity that contributes to ceq5          
-    !                                                                       
-    !                                                                       
-    !  to set bnd cond to no current across imax 
-    !  (ie., no eq electrojet) explicityly zero ss(j) for all j  
-    !                                                                       
+    !             +ceq3*v(imax,j+1)+ceq4*v(imax-1,j)+ceq5
+    !  where ceq1 through ceq5 are calculated below.
+    !
+    !  ss(j) is a cowling-type conductance (see mantjou.eqbndy.text)
+    !       integrated over the cross-section of the equatorial band,at
+    !       any given local time.
+    !
+    !  sw(j) is a wind-dependent quantity that contributes to ceq5
+    !
+    !
+    !  to set bnd cond to no current across imax
+    !  (ie., no eq electrojet) explicityly zero ss(j) for all j
+    !
     !______________________________________________________________________________
-    !                                                                       
+    !
     INTEGER (iprec) :: i, j, n
     REAL (rprec) :: cf, ceq1, ceq2, ceq3, ceq4, ceq5, den
     REAL (rprec), PARAMETER :: bnorm = 1.0E-6_rprec
@@ -5939,17 +5941,17 @@ contains
        ceq4 = 1.0_rprec
        ceq5 = - 2.0_rprec * ri * alpha (i, j) * dlam * bnorm * bir (i, j) &
             * (pwe(i,j) + signbe * hall(i,j) / pedlam (i,j) * hwn (i,j))
-       ceq5 = ceq5 - cf * (sw (j + 1) - sw (j - 1) ) 
+       ceq5 = ceq5 - cf * (sw (j + 1) - sw (j - 1) )
        den  = 1.0_rprec - ceq2 * c_pde (1, i, j)
-       !                                                                       
+       !
        c_pde (5, i, j) = (c_pde (5, i, j) + ceq5 * c_pde (1, i, j) ) / den
        c_pde (4, i, j) = (c_pde (4, i, j) + ceq1 * c_pde (1, i, j) ) / den
        c_pde (3, i, j) = (c_pde (3, i, j) + ceq3 * c_pde (1, i, j) ) / den
        c_pde (2, i, j) = (c_pde (2, i, j) + ceq4 * c_pde (1, i, j) ) / den
        c_pde (1, i, j) = 0.0_rprec
     END DO
-    !                                                                       
-    DO n = 1, ncoeff 
+    !
+    DO n = 1, ncoeff
        CALL Wrap_around_ghostcells (c_pde (n,:,:), isize, jsize, n_gc)
     END DO
 
@@ -5980,18 +5982,18 @@ contains
     INTEGER (iprec), SAVE :: N_calls = 0
     INTEGER (iprec):: i, j, kindex
     !
-    !         j-1    j     j+1        
+    !         j-1    j     j+1
     !
     !   i-1..  x     A2     x
     !                |
-    !                |              
+    !                |
     !   i ...  A4----P----A3
     !                |
     !                |
     !   i+1..  x     A1     x
     !
     !     In this subroutine we presume that high-lat. bndy is
-    !     adequately specified before calling it, that is, 
+    !     adequately specified before calling it, that is,
     !     ain(j)+1 > min_j(j) >= ain(j) and |min(j)-ain(j)| > 1E-6
     !     and min_j(j) >=2 (check all this outside?)
     !
@@ -6003,7 +6005,7 @@ contains
          'idim must be larger than 2 in NEW_COEFF')
     !
     !
-    !     1. Run over ALL grid points and flag them as being 
+    !     1. Run over ALL grid points and flag them as being
     !     inside the modeling region (includes integer boundary
     !     crossings) with pt_loc = 1 or outside the modeling
     !     region with pt_loc = 0:
@@ -6012,13 +6014,13 @@ contains
        DO i = 1, isize
           IF (i >= bndloc(j)) THEN
              pt_loc(i,j) = .TRUE.
-          ELSE 
+          ELSE
              pt_loc(i,j) = .FALSE.
           END IF
        END DO
     END DO
     CALL Wrap_around_ghostcells_log (pt_loc, isize, jsize, n_gc)
-    ! 
+    !
     !
     !-------------------------------------------------------
     !     Preliminary calculations:
@@ -6033,13 +6035,13 @@ contains
     END DO
     CALL Wrap_around_ghostcells (a, isize, jsize, n_gc)
     CALL Wrap_around_ghostcells (b, isize, jsize, n_gc)
-    !------------------------------------------------------- 
+    !-------------------------------------------------------
     !
     !     2. Run over grid points inside boundaries. For each
     !     point in the modeling region, generate coefficients
     !     of the difference equation. Our PDE has the form:
     !
-    !     -b*D2V/Dlambda^2 -a*D2V/Dpsi^2 + 
+    !     -b*D2V/Dlambda^2 -a*D2V/Dpsi^2 +
     !     + (-Db/Dlambda + Dhall/Dpsi)*DV/Dlambda +
     !     + (-Da/Dpsi - Dhall/Dlambda)*DV/Dpsi = RHS
     !     or
@@ -6048,9 +6050,9 @@ contains
     !
     !     We need: to approximate derivatives of V by finite
     !     differences, and approximate "coefficients" f_lambda,
-    !     f_psi, g_lambda, g_psi by finite differences. For 
+    !     f_psi, g_lambda, g_psi by finite differences. For
     !     approximating coefficients, we can only use neighbors
-    !     that are integer grid points since conductances are 
+    !     that are integer grid points since conductances are
     !     evaluated on the grid. For approximating derivatives of
     !     V, we will use values of V on non-integer grid neighbors
     !     computed from the boundary condition on V.
@@ -6066,7 +6068,7 @@ contains
           !           For each grid point (i,j)=P in the modeling
           !           region, we will need four neighbors.
           !           Determine how many of the grid neighbors are
-          !           inside the modeling region, and flag them. 
+          !           inside the modeling region, and flag them.
           !
           a2_loc = pt_loc(MAX (i - 1, 1),j)
           a3_loc = pt_loc(i,j + 1)
@@ -6082,7 +6084,7 @@ contains
              alp1 = REAL(i,rprec) - bndloc(j)
           END IF
           !
-          IF (alp1 < 1E-6) THEN 
+          IF (alp1 < 1E-6) THEN
              !
              !               This is a special case when the point (i,j) is
              !               on the boundary (integer boundary crossing).
@@ -6119,11 +6121,11 @@ contains
           IF (ABS(alp1-1.0_rprec) < 10.0*EPSILON(1.0_rprec)) THEN
 
              IF (i < isize) THEN
-                !           
+                !
                 !                 (i,j) is an interior grid point, and we
                 !                 can use central differences formula for
                 !                 lambda-derivatives:
-                ! 
+                !
                 bb = b(i+1,j) - b(i-1,j)
                 ee = (hall(i+1,j) - hall(i-1,j))*signbe
 
@@ -6139,7 +6141,7 @@ contains
              END IF
              !
           ELSE
-             !         
+             !
              !              alp1 < 1, so "i-1,j" grid point is outside
              !              the boundary, and we need forward difference:
              !
@@ -6198,12 +6200,12 @@ contains
              cc = 0.0_rprec
              !
           END IF
-          !               
+          !
           !
           g_lam       = - b(i,j)
           g_psi       = - a(i,j)
-          f_lam       = - bb/dlam/2. + cc/dpsi/2. 
-          f_psi       = - ee/dlam/2. - aa/dpsi/2. 
+          f_lam       = - bb/dlam/2. + cc/dpsi/2.
+          f_psi       = - ee/dlam/2. - aa/dpsi/2.
           !
           !
           !           Approximate partial derivatives of V in the PDE
@@ -6285,7 +6287,7 @@ contains
   ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   !
   !
-  SUBROUTINE New_cfive 
+  SUBROUTINE New_cfive
 
     INTEGER (iprec) :: i,j
     !
@@ -6318,59 +6320,59 @@ contains
     pi = 4.0_rprec * ATAN (1.0_rprec)
     cut = 10.0_rprec        ! cut for sum of residuals in volts
     rjac = 1.0_rprec - pi**2 /1.0_rprec / (jmax**2) ! what is it for a non-square grid?
-    !                                                                       
+    !
     omega = 1.0_rprec
-    !                                                                       
     !
     !
-    iterate_loop: DO n = 1, maxits 
+    !
+    iterate_loop: DO n = 1, maxits
        !
        anorm = 0.0_rprec
-       !                                                                       
-       !        Inner boundary using coefficients   
        !
-       DO j = 2, jmax - 1 
-          i = imin_j (j) 
+       !        Inner boundary using coefficients
+       !
+       DO j = 2, jmax - 1
+          i = imin_j (j)
           u (i, j) = c (5, i, j) + c (1, i, j) * u (i + 1, j) &
                + c (2, i, j) * u (i - 1, j) &
                + c (3, i, j) * u (i, j + 1) &
                + c (4, i, j) * u (i, j - 1)
        END DO
-       !                                                                       
-       !        Outer boundary using coefficients             
-       !        took out c1 because imax+1 is out of bounds  
        !
-       DO j = 2, jmax - 1 
-          i = imax 
+       !        Outer boundary using coefficients
+       !        took out c1 because imax+1 is out of bounds
+       !
+       DO j = 2, jmax - 1
+          i = imax
           u (i, j) = c (5, i, j) + c (2, i, j) * u (i - 1, j) &
                + c (3, i, j) * u (i, j + 1) &
-               + c (4, i, j) * u (i, j - 1) 
+               + c (4, i, j) * u (i, j - 1)
        END DO
        !
-       !        Use periodicity to get other points:            
-       !                                                                       
-       u (imin_j (1), 1) = u (imin_j (jmax - 2), jmax - 2) 
-       u (imin_j (jmax), jmax) = u (imin_j (3), 3) 
-       !                                                                       
-       u (imax, 1) = u (imax, jmax - 2) 
-       u (imax, jmax) = u (imax, 3) 
-       !                                                                       
+       !        Use periodicity to get other points:
+       !
+       u (imin_j (1), 1) = u (imin_j (jmax - 2), jmax - 2)
+       u (imin_j (jmax), jmax) = u (imin_j (3), 3)
+       !
+       u (imax, 1) = u (imax, jmax - 2)
+       u (imax, jmax) = u (imax, 3)
+       !
        DO j = 2, jmax-2
-          DO i = imin_j(j)+1, imax - 1 
+          DO i = imin_j(j)+1, imax - 1
              !
              u (i, 1)        = u (i,jmax-2)
              u (i, jmax - 1) = u (i, 2)
              u (i,jmax)      = u (i,3)
              !
-             IF (MOD (i + j, 2) == MOD (n, 2) ) THEN 
+             IF (MOD (i + j, 2) == MOD (n, 2) ) THEN
                 resid = - c (1, i, j) * u (i + 1, j) &
                      - c (2, i, j) * u (i - 1, j) &
                      - c (3, i, j) * u (i, j + 1) &
                      - c (4, i, j) * u (i, j - 1) &
-                     + u (i, j) - c (5, i, j) 
+                     + u (i, j) - c (5, i, j)
                 !
-                anorm = anorm + ABS (resid) 
-                u (i, j) = u (i, j) - omega * resid 
+                anorm = anorm + ABS (resid)
+                u (i, j) = u (i, j) - omega * resid
                 !
              END IF
              !
@@ -6378,17 +6380,17 @@ contains
        END DO
        !
        WRITE (*,*) 'anorm',n,anorm
-       IF (n == 1) THEN 
-          omega = 1.0_rprec / (1.0_rprec-0.5_rprec * rjac**2) 
-       ELSE 
-          omega = 1.0_rprec / (1.0_rprec-0.25_rprec * rjac**2 * omega) 
+       IF (n == 1) THEN
+          omega = 1.0_rprec / (1.0_rprec-0.5_rprec * rjac**2)
+       ELSE
+          omega = 1.0_rprec / (1.0_rprec-0.25_rprec * rjac**2 * omega)
        END IF
-       !                                                                       
+       !
        IF (n >  1 .AND. anorm < cut) THEN
           WRITE (*,*) 'in potnt3',n,anorm
           EXIT iterate_loop
        END IF
-       !                                                                       
+       !
     END DO iterate_loop
     !
     IF (n >= maxits) call CON_stop('ERROR in IM/RCM2/src/rcm_comput.f90:'//&
@@ -6423,7 +6425,7 @@ contains
   END FUNCTION Thet
   !
   !
-  !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   !
   !
   SUBROUTINE Elemod (icase, ikp, glat, amlt, value)
@@ -6462,7 +6464,7 @@ contains
     !     VALUE     LOG10 ENERGY FLUX IN KEV/CM**2-S-SR (ICASE=1)
     !               LOG10 NUMBER FLUX IN ELECTRONS/CM**2-S-SR (ICASE=2)
     !               CONDUCTIVITY IN MHOS (ICASE=3,4)
-    !  
+    !
     !   INTERNAL VARIABLES
     !
     !     CRD       COEFFICIENTS FOR MAXIMUM FUNCTION VALUE
@@ -6569,7 +6571,7 @@ contains
 
 
 
-  SUBROUTINE Set_precipitation_rates 
+  SUBROUTINE Set_precipitation_rates
 
     integer (iprec) :: k
 
@@ -6590,7 +6592,7 @@ contains
 
     REAL (rprec), INTENT (IN)  :: b1_in,  b2_in
     REAL (rprec), INTENT (OUT) :: b1_out, b2_out
-    !                                                                       
+    !
     !   Author: r.w. spiro
     !   Last update: 1-3-84 by rws
     !   This subroutine adjusts a pair of input bj values (b1 and b2)

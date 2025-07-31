@@ -346,6 +346,24 @@ The value 10 hours shown by the example seems to be close to optimal.
 The default is UseDecay false.
 </command>
 
+<command name="ELECTRONDECAY">
+	<if expr="$UseDecay">
+		<parameter name="TauElectronDecay"   type="real"
+						   default="-1."/>
+	</if>
+
+#ELECTRONDECAY
+-1.  		TauElectronDecay in seconds
+
+Only read if #DECAY is active (UseDecay = T) and #DECAY appears before #ELECTRONDECAY
+in PARAM.in. This parameter is introduced as an optional method of changing electron
+decay rates separately from ion decay rates, and is applied in the same manner as
+#DECAY. 
+
+The default value is shown above, and will set the electron decay rate to the
+ion decay rate if $<$ 0. 
+</command>
+
 </commandgroup>
 
 </commandList>

@@ -1,5 +1,5 @@
-!  Copyright (C) 2002 Regents of the University of Michigan, 
-!  portions used with permission 
+!  Copyright (C) 2002 Regents of the University of Michigan,
+!  portions used with permission
 !  For more information, see http://csem.engin.umich.edu/tools/swmf
 
 module IM_wrapper
@@ -44,7 +44,7 @@ contains
          plot_area, plot_var, plot_format, UseEventPlotName, &
          x_h, x_o, L_dktime, sunspot_number, f107, doy, &
          ipot, ibnd_type, precipitation_tau, UseDecay, DecayTimescale, &
-         NameCompModel, F107young, iProc, nProc, iComm
+         TauElectronDecay, NameCompModel, F107young, iProc, nProc, iComm
     use ModReadParam
     use ModUtilities, ONLY: fix_dir_name, check_dir, lower_case
 
@@ -77,6 +77,7 @@ contains
             'IM_init_mpi: IM_ERROR this version can run on 1 PE only!')
     case('CHECK')
        ! We should check and correct parameters here
+       if(TauElectronDecay < 0) TauElectronDecay = DecayTimescale
        if(iProc==0)write(*,*) NameSub,': CHECK iSession =',i_session_read()
        RETURN
     case('READ')
@@ -139,7 +140,7 @@ contains
                 ! Extract format string value:
                 if(index(StringPlot,'idl')>0)then
                    plot_format(ifile)='idl'
-                elseif(index(StringPlot,'tec')>0)then 
+                elseif(index(StringPlot,'tec')>0)then
                    plot_format(ifile)='tec'
                 else
                    call CON_stop('ERROR in IM/RCM2/src/IM_wrapper.f90: '// &
@@ -213,6 +214,11 @@ contains
                 call read_var('DecayTimescale',tmpReal)
                 DecayTimescale=tmpReal
              end if
+          case("#ELECTRONDECAY")
+              if(UseDecay)then
+                  call read_var('TauElectronDecay',tmpReal)
+                  TauElectronDecay=tmpReal
+              end if
           case default
              if(iProc==0) then
                 write(*,'(a,i4,a)')NameSub//' IM_ERROR at line ',i_line_read(),&
@@ -274,7 +280,7 @@ contains
          Coord2_I=real(aloct(1,1:jSize)),          & ! longitudes
          Coord3_I=Radius_I,                        & ! radial size in meters
          IsPeriodic_D=(/.false.,.true./),          & ! periodic in longitude
-         nVar = 7,                                 & ! number of "fluid" vars                     
+         nVar = 7,                                 & ! number of "fluid" vars
          NameVar = 'rho p Hprho Hpp Oprho Opp Pe')   ! names of "fluid" vars
 
   end subroutine IM_set_grid
@@ -389,7 +395,7 @@ contains
           call CON_stop(NameSub//' SWMF_ERROR index out of range')
        end if
 
-       ! Only worry about the northern hemisphere....  
+       ! Only worry about the northern hemisphere....
        ! IE can fix the southern hemisphere.
 
        if (iLat <= iSize .and. iLon <= jSize) then
@@ -407,7 +413,7 @@ contains
     end do
 
 !!! aloct = angle from noon on radians
-!!! colat 
+!!! colat
 !!! birk - with ghost cells (positive down, summed over two hems microamps/m2)
 !!! eflux - lat, lon, species (1 - electrons) (total between 2 hems ergs/cm2/s)
 !!! eavg - lat, lon, species (1 - electrons) (keV)
@@ -536,7 +542,7 @@ contains
 
     integer, parameter :: vol_=1, z0x_=2, z0y_=3, bmin_=4, rho_=5, &
          p_=6, HpRho_=5, HpP_=6, OpRho_=7, OpP_=8
-    integer :: pe_ = -1 
+    integer :: pe_ = -1
     logical :: DoTest, DoTestMe
     !--------------------------------------------------------------------------
     call CON_set_do_test(NameSub, DoTest, DoTestMe)
@@ -573,7 +579,7 @@ contains
     ! in GM as well as in RCM. Magnetic field comes in SI units, RCM needs nT:
     vm(1:isize,1:jsize) = vm(1:isize,1:jsize) / 1.0e+9
     where(vm(1:isize,1:jsize)>0.) &
-         vm(1:isize,1:jsize)=vm(1:isize,1:jsize)**(-2./3.) 
+         vm(1:isize,1:jsize)=vm(1:isize,1:jsize)**(-2./3.)
     xmin(1:isize,1:jsize) = Buffer_IIV(:,:,z0x_)
     ymin(1:isize,1:jsize) = Buffer_IIV(:,:,z0y_)
     bmin(1:isize,1:jsize) = Buffer_IIV(:,:,bmin_)
@@ -584,11 +590,11 @@ contains
     call wrap_around_ghostcells(bmin,isize,jsize,n_gc)
 
     if(DoMultiFluidGMCoupling)then
-       ! MultiFluid                                                                       
+       ! MultiFluid
        densityHp(1:isize,1:jsize) = &
-            Buffer_IIV(:,:,HpRho_)/xmass(2)/1.0E+6 ! in cm-3       
+            Buffer_IIV(:,:,HpRho_)/xmass(2)/1.0E+6 ! in cm-3
        densityOp(1:isize,1:jsize) = &
-            Buffer_IIV(:,:,OpRho_)/xmass(3)/1.0E+6 ! in cm-3       
+            Buffer_IIV(:,:,OpRho_)/xmass(3)/1.0E+6 ! in cm-3
        pressureHp(1:isize,1:jsize)= Buffer_IIV(:,:,HpP_)
        pressureOp(1:isize,1:jsize)= Buffer_IIV(:,:,OpP_)
        pressurePe(1:isize,1:jsize)= Buffer_IIV(:,:,pe_)
@@ -605,7 +611,7 @@ contains
           temperatureTe(1:isize,1:jsize) = 5000 / 7.8
        end where
        where(Buffer_IIV(:,:,Oprho_) /= 0.0)
-          ! in ev     
+          ! in ev
           temperatureOp (1:iSize,1:jSize) = &
                Buffer_IIV(:,:,Opp_)/(Buffer_IIV(:,:,Oprho_)/xmass(3))/1.6E-19
        elsewhere
@@ -631,7 +637,7 @@ contains
        density(1:isize,1:jsize) = Buffer_IIV(:,:,rho_)/xmass(2)/1.0E+6 ! in cm-3
        pressurePe(1:isize,1:jsize)= Buffer_IIV(:,:,pe_)
        pressure(1:isize,1:jsize) = Buffer_IIV(:,:,p_)
-       where(Buffer_IIV(:,:,rho_) /= 0.0) 
+       where(Buffer_IIV(:,:,rho_) /= 0.0)
           temperature(1:iSize,1:jSize) = ((xmass(2)*x_h+xmass(3)*x_o)/xmass(2)) * &
                Buffer_IIV(:,:,p_)/(Buffer_IIV(:,:,rho_)/xmass(2))/1.6E-19 ! in eV
           temperatureTe(1:iSize,1:jSize) = ((xmass(2)*x_h+xmass(3)*x_o)/xmass(2)) * &
@@ -671,7 +677,7 @@ contains
               'VARIABLES="J", "I", "vol", "z0x", "z0y", "bmin", "rho", "p"'
       else
          write(UnitTmp_,'(a)') &
-              'VARIABLES="J", "I", "vol", "z0x", "z0y", "bmin",&           
+              'VARIABLES="J", "I", "vol", "z0x", "z0y", "bmin",&
               & "Hprho","Hpp","Oprho","Opp"'
       end if
       write(UnitTmp_,'(a,i4,a,i4,a)') &
@@ -682,7 +688,7 @@ contains
                  Buffer_IIV(i,j,vol_),Buffer_IIV(i,j,z0x_),Buffer_IIV(i,j,z0y_), &
                  Buffer_IIV(i,j,bmin_),Buffer_IIV(i,j,rho_),Buffer_IIV(i,j,p_)
          else
-            !multi-fluid                                                                
+            !multi-fluid
             write(UnitTmp_,'(2i4,6G14.6)') j,i, &
                  Buffer_IIV(i,j,vol_), &
                  Buffer_IIV(i,j,z0x_), &
@@ -809,10 +815,10 @@ contains
           Buffer_IIV(i,j,pres_) = -1.
           Buffer_IIV(i,j,dens_) = -1.
        else
-          do k = 1, kmax(1) ! electron 
+          do k = 1, kmax(1) ! electron
              Buffer_IIV(i,j,pe_) = Buffer_IIV(i,j,pe_) + &
                   vm(i,j)**2.5*eeta(i,j,k)*ABS(alamc(k))
-!!!! temporarily add electron density to ion density for testing     
+!!!! temporarily add electron density to ion density for testing
              Buffer_IIV(i,j,dens_) = Buffer_IIV(i,j,dens_) + &
                   eeta(i,j,k)*vm(i,j)**1.5 * xmass(ikflavc(k))
           end do
@@ -1057,7 +1063,7 @@ contains
     call RCM_advec (2, iTimeStart, iTimeEnd, iDtNow)
 
     ! return time at the end of the time step to CON
-    TimeSimulation   = TimeSimulation + iDtNow 
+    TimeSimulation   = TimeSimulation + iDtNow
 
   end subroutine IM_run
 

@@ -60,6 +60,7 @@ module Rcm_variables
   ! SWMF: set exponential decay of ring current
   logical     :: UseDecay = .FALSE.
   real(rprec) :: DecayTimescale = 36000.
+  real(rprec) :: TauElectronDecay  = -1.
 
   REAL (rprec), PARAMETER ::     &
        pi           = 3.141592654_rprec, &
@@ -68,7 +69,7 @@ module Rcm_variables
        rtd          = 180.0_rprec/pi, &
        dtr          = pi/180.0_rprec, &
        rth          = 12.0_rprec / pi,&
-       htr          = 1.0_rprec / rth      
+       htr          = 1.0_rprec / rth
   !
   INTEGER (iprec), PARAMETER :: &
        n_gc  = 2,  &
@@ -192,7 +193,7 @@ module Rcm_variables
        sw  (1-n_gc:jsize+n_gc), &
        eflux (1-n_gc:isize+n_gc,1-n_gc:jsize+n_gc,iesize), &
        eavg (1-n_gc:isize+n_gc,1-n_gc:jsize+n_gc,iesize),&
-       c_pde (ncoeff, 1-n_gc:isize+n_gc, 1-n_gc:jsize+n_gc), c5w 
+       c_pde (ncoeff, 1-n_gc:isize+n_gc, 1-n_gc:jsize+n_gc), c5w
   !
   !
   !------------------------------------------------------------------------------
@@ -252,15 +253,15 @@ module Rcm_variables
   REAL (rprec) :: time0,time1
 
   ! - New variables for a future parallelized RCM:
-  ! 
+  !
   !   integer, parameter :: n_blk = 1, &
   !   REAL (rprec), DIMENSION (1-n_gc:isize+n_gc, 1-n_gc:jsize+n_gc,n_blk) :: &
   !                 v_blk, birk_blk, &
   !                 alpha_blk, beta_blk, aloct_blk, colat_blk, vcorot_blk, &
   !                 sini_blk, bir_blk, &
   !                 qtpedlam_blk, qtped_blk, qthall_blk, pedlam_blk, pedpsi_blk,&
-  !                 hall_blk, c5w_blk 
-  ! 
+  !                 hall_blk, c5w_blk
+  !
   ! SWMF: allocatable arrays(1-n_gc:isize+n_gc,1-n_gc:jsize+n_gc,kcsize)
   !    REAL (rprec), allocatable :: eeta_blk(:,:,:)
   !
