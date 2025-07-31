@@ -32,7 +32,7 @@ Default value is true for ascii.
 </command>
 
 <command name="RCMDIR">
-	<parameter name="NameRcmDir" type="string" length="100" 
+	<parameter name="NameRcmDir" type="string" length="100"
 						default="IM"/>
 
 #RCMDIR
@@ -62,26 +62,26 @@ The default value is false.
 	     default="0" />
   <for from="1" to="$nFilesPlot">
     <parameter name="StringPlot" type="strings" min="3" max="3">
-      <part name="plotarea" type="string" input="select" 
+      <part name="plotarea" type="string" input="select"
 	    required="T">
-	<option name="2D vars." value="2d/2D" 
+	<option name="2D vars." value="2d/2D"
 		default="T"/>
 	<option name="3D vars." value="3d/2D"/>
       </part>
       <part name="plotvar" type="string" input="select"
 	    required="T">
-	<option name="minimum set" 
+	<option name="minimum set"
 		value="min/MIN" default="T"/>
-	<option name="maximum set" 
+	<option name="maximum set"
 		value="max/MAX/rcm/RCM"/>
-	<option name="CCMC set 1" 
+	<option name="CCMC set 1"
 		value="mc1/MC1/mc1/Mc1"/>
-	<option name="CCMC set 2" 
+	<option name="CCMC set 2"
 		value="mc2/MC2/mc2/Mc2"/>
       </part>
-      <part name="plotformat" type="string" input="select" 
+      <part name="plotformat" type="string" input="select"
 	    required="T">
-	<option name="TECPLOT" value="tec/TEC" 
+	<option name="TECPLOT" value="tec/TEC"
 		default="T"/>
 	<option name="IDL"     value="idl/IDL"
 		if="$plotarea =~ /2d/i" />
@@ -133,7 +133,7 @@ The plotvar string specifies which variables to write, either a minimum set,
 or a maximum set (the 'rcm' string is preserved for backwards
 compatibility only, and it is the same as the 'max' string), or
 one of the custom sets 'mc1' or 'mc2'.
-The 'min' value corresponds to the variables 
+The 'min' value corresponds to the variables
 'rho T P rho(MHD) T(MHD) P(MHD' in 2D and to 'eeta veff' in 3D.
 
 The 'max' value corresponds to a lot of variables in 2D. For Tecplot format
@@ -145,11 +145,11 @@ and the 'max' variable set contains 'bndloc Vm |B| V birk alam eeta veff w'.
 The values 'mc1' and 'mc2' were originally designed to be used by CCMC.
 For 2d files, 'mc1' and 'mc2' mean the same thing and define a set of
 both ionospheric quantities (potential, field-aligned currents, conductances)
-as well as plasma moments of the ring current species. 
+as well as plasma moments of the ring current species.
 For 3d, 'mc1' and 'mc2' will cause output of full particle energy spectra
 (together with some extra variables); for 'mc1', these spectra will be in
 the form of flux-tube content (proportional to the phase space density),
-while for 'mc2' it will be differential particle fluxes. 
+while for 'mc2' it will be differential particle fluxes.
 
 
 The DnSavePlot and DtSavePlot integers define the plotting frequency
@@ -178,7 +178,7 @@ The DoRestart parameter determines if the RCM starts from the restart
 files saved from a previous run, or from scratch via the standard input files.
 The default is DoRestart = .false.
 </command>
-	
+
 <command name="TIMESTEP">
 	<parameter name="iDtRcm" type="integer" min="1" default="5"/>
 
@@ -209,12 +209,12 @@ value is 5 seconds.
   </if>
 
 #COMPOSITION
-FIXED                   NameCompModel  
+FIXED                   NameCompModel
 0.7      		FractionH
 0.3      		FractionO
 
 #COMPOSITION
-YOUNG                   NameCompModel  
+YOUNG                   NameCompModel
 128.3                   F107
 
 When RCM is coupled with a single fluid MHD code, the boundary conditions
@@ -234,7 +234,7 @@ Coupling with a multi-ion MHD code removes this adjustable parameter.
 Default values are shown by the first example.
 
 </command>
-	
+
 <command name="CHARGEEXCHANGE">
 	<parameter name="UseChargeExchange" type="logical" default="T"/>
 	<if expr="$UseChargeExchange">
@@ -283,8 +283,8 @@ in the magnetotail of the ellipse. Default values are shown.
 #IONOSPHERE
 IE			TypeIonosphere
 
-Define which ionosphere solver to use. Options are "IE" (SWMF solver) or "RCM" 
-(internal solver). Default is "IE". 
+Define which ionosphere solver to use. Options are "IE" (SWMF solver) or "RCM"
+(internal solver). Default is "IE".
 </command>
 
 
@@ -300,7 +300,7 @@ Define which ionosphere solver to use. Options are "IE" (SWMF solver) or "RCM"
 
 Parameter that controls, in a somewhat crude manner,
 the rate of particle precipitation into the
-atmosphere (one for each species, total of 3). RCM code calculates 
+atmosphere (one for each species, total of 3). RCM code calculates
 the rate of precipitation in the limit of strong pitch-angle scattering,
 and the factors here reduce
 this maximum possible rate. In other words, if the max. rate of precipitation
@@ -309,7 +309,7 @@ R_ele*LossFactore. If LossFactor=0, then there is no loss through precipitaton;
 if LossFactor=1, the precipitation is maximum possible. This parameter is
 used in two places in the RCM: one is a loss process for hot magnetospheric
 population (right-hand side of the advection equation), the other one is
-to evaluate conductance enhancements in the auroral oval (in the module 
+to evaluate conductance enhancements in the auroral oval (in the module
 that computes conductances).
 
 </command>
@@ -320,7 +320,7 @@ that computes conductances).
 #TEMPERATURE
 3.0		TemperatureFactor
 
-Artificially increase the temperature obtained from the magnetosphere model. 
+Artificially increase the temperature obtained from the magnetosphere model.
 Default value is 1, i.e. no change.
 </command>
 
@@ -336,7 +336,7 @@ T			UseDecay
 36000.  		DecayTimescale in seconds
 
 If UseDecay is true, add an exponential decay to the ring current, so if there are
-no other effects, it decays proportional to 
+no other effects, it decays proportional to
 \begin{verbatim}
 exp(-(deltaT/DecayTimescale))
 \end{verbatim}
@@ -358,10 +358,10 @@ The default is UseDecay false.
 Only read if #DECAY is active (UseDecay = T) and #DECAY appears before #ELECTRONDECAY
 in PARAM.in. This parameter is introduced as an optional method of changing electron
 decay rates separately from ion decay rates, and is applied in the same manner as
-#DECAY. 
+#DECAY.
 
 The default value is shown above, and will set the electron decay rate to the
-ion decay rate if $<$ 0. 
+ion decay rate if TauElectronDecay &lt; 0.
 </command>
 
 </commandgroup>
