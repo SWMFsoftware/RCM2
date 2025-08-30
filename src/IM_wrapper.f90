@@ -48,13 +48,12 @@ contains
     use ModReadParam
     use ModUtilities, ONLY: fix_dir_name, check_dir, lower_case
 
-    character (len=*), parameter :: NameSub='IM_set_param'
-
     ! Arguments
     type(CompInfoType), intent(inout):: CompInfo   ! Information for this comp.
     character (len=*), intent(in)    :: TypeAction ! What to do
 
-    !LOCAL VARIABLES:
+    ! local variables
+
     character (len=100):: NameCommand, StringPlot
     character (len=20) :: StringTypeIonosphere='', StringTypeOuterboundary='',&
          LossFactorString=''
@@ -63,8 +62,9 @@ contains
     integer :: iFile
     real :: SunspotNumber, F107MonthlyMean, DayOfYear, tau_in=0.0
     real :: tmpReal
-    !-------------------------------------------------------------------------
 
+    character(len=*), parameter:: NameSub = 'IM_set_param'
+    !--------------------------------------------------------------------------
     select case(TypeAction)
     case('VERSION')
        call put(CompInfo,                         &
@@ -240,7 +240,6 @@ contains
     end select
 
   end subroutine IM_set_param
-
   !============================================================================
   subroutine IM_set_grid
 
@@ -249,15 +248,15 @@ contains
     use RCM_variables, ONLY: iSize, jSize, colat, aloct, Ri, nProc
     use RCM_io, ONLY: read_grid
 
-    character (len=*), parameter :: NameSub='IM_set_grid'
     real :: Radius_I(1)
     logical :: IsInitialized=.false.
     logical :: DoTest, DoTestMe
-    !-------------------------------------------------------------------------
+    character(len=*), parameter:: NameSub = 'IM_set_grid'
+    !--------------------------------------------------------------------------
     call CON_set_do_test(NameSub, DoTest, DoTestMe)
     if(DoTest)write(*,*)'IM_set_grid_descriptor called, IsInitialized=',&
          IsInitialized
-    if(IsInitialized) return
+    if(IsInitialized) RETURN
     IsInitialized=.true.
 
     if(is_proc(IM_))call read_grid()
@@ -271,22 +270,20 @@ contains
     ! IM grid size in generalized coordinates
     call set_grid_descriptor( IM_,                 & ! component index
          nDim=2,                                   & ! dimensionality
-         nRootBlock_D=(/1,1/),                     & ! single block
-         nCell_D=(/iSize,jSize/),                  & ! size of cell based grid
-         XyzMin_D=(/cHalf, cHalf/),                & ! min gen.coords for cells
-         XyzMax_D=(/iSize+cHalf,jSize+cHalf/),     & ! max gen.coords for cells
+         nRootBlock_D=[1,1],                     & ! single block
+         nCell_D=[iSize,jSize],                  & ! size of cell based grid
+         XyzMin_D=[0.5, 0.5],                    & ! min gen.coords for cells
+         XyzMax_D=[iSize+0.5, jSize+0.5],     & ! max gen.coords for cells
          TypeCoord='SMG',                          & ! solar magnetic coord
          Coord1_I=real(colat(1:iSize,1)),          & ! colatitudes
          Coord2_I=real(aloct(1,1:jSize)),          & ! longitudes
          Coord3_I=Radius_I,                        & ! radial size in meters
-         IsPeriodic_D=(/.false.,.true./),          & ! periodic in longitude
+         IsPeriodic_D=[.false.,.true.],          & ! periodic in longitude
          nVar = 7,                                 & ! number of "fluid" vars
          NameVar = 'rho p Hprho Hpp Oprho Opp Pe')   ! names of "fluid" vars
 
   end subroutine IM_set_grid
-
   !============================================================================
-
   subroutine IM_print_variables(NameSource)
 
     use rcm_variables
@@ -294,14 +291,13 @@ contains
     use ModIoUnit, ONLY: UnitTmp_
     use ModUtilities, ONLY: open_file, close_file
 
-    character(len=*), parameter :: NameSub='IM_print_variables'
-
     character(len=*),intent(in) :: NameSource
     integer            :: nFile=0
     character(len=100) :: NameFile
     character(len=100) :: NameVar
     integer            :: i,j
     real               :: Lat,Lon
+    character(len=*), parameter:: NameSub = 'IM_print_variables'
     !--------------------------------------------------------------------------
     select case(NameSource)
     case('IE')
@@ -326,8 +322,8 @@ contains
 
     do i=1,iSize
        do j=1,jSize
-          Lon = (        aloct(i,j))*(180./cPi)
-          Lat = (cHalfPi-colat(i,j))*(180./cPi)
+          Lon = (aloct(i,j))*(180./cPi)
+          Lat = (cHalfPi - colat(i,j))*(180./cPi)
           select case(NameSource)
           case('IE')
              write(UnitTmp_,'(2i4,6G14.6)')j,i,Lon,Lat,v(i,j),birk_mhd(i,j),&
@@ -350,9 +346,7 @@ contains
     call close_file
 
   end subroutine IM_print_variables
-
   !============================================================================
-
   subroutine IM_get_for_ie(nPoint,iPointStart,Index,Weight,Buff_V,nVar)
 
     ! Provide current for IE
@@ -363,8 +357,6 @@ contains
     use RCM_variables, ONLY: birk, eavg, eflux, iSize, jSize, colat, aloct
     use CON_router,   ONLY: IndexPtrType, WeightPtrType
 
-    character(len=*), parameter :: NameSub='IM_get_for_ie'
-
     integer,intent(in)            :: nPoint, iPointStart, nVar
     real,intent(out)              :: Buff_V(nVar)
     type(IndexPtrType),intent(in) :: Index
@@ -373,6 +365,8 @@ contains
     integer :: iLat, iLon, iBlock, iPoint
     real    :: w
 
+    character(len=*), parameter:: NameSub = 'IM_get_for_ie'
+    !--------------------------------------------------------------------------
     Buff_V = 0.0
 
     do iPoint = iPointStart, iPointStart + nPoint - 1
@@ -419,17 +413,15 @@ contains
 !!! eavg - lat, lon, species (1 - electrons) (keV)
 
   end subroutine IM_get_for_ie
-
   !============================================================================
   subroutine IM_put_from_ie_mpi(nTheta, nPhi, Potential_II)
 
     integer, intent(in):: nTheta, nPhi
     real,    intent(in):: Potential_II(nTheta, nPhi)
-
+    !--------------------------------------------------------------------------
     call CON_stop('IM_put_from_ie_mpi cannot be used by RCM2!')
 
   end subroutine IM_put_from_ie_mpi
-
   !============================================================================
   subroutine IM_put_from_gm_crcm(Integral_IIV, Kp, Ae,&
        iSizeIn, jSizeIn, nIntegralIn, &
@@ -444,26 +436,24 @@ contains
     real,    intent(in) :: tSimulation
     character (len=*), intent(in) :: NameVar
 
-    character (len=*), parameter :: NameSub='IM_put_from_gm_crcm'
-
+    character(len=*), parameter:: NameSub = 'IM_put_from_gm_crcm'
+    !--------------------------------------------------------------------------
     call CON_stop(NameSub//': CRCM version cannot be used for RCM2!')
 
   end subroutine IM_put_from_gm_crcm
-
   !============================================================================
-
   subroutine IM_put_from_ie(nPoint,iPointStart,Index,Weight,DoAdd,Buff_V,nVar)
 
     use CON_router,   ONLY: IndexPtrType, WeightPtrType
     use RCM_variables, ONLY: v, birk_mhd, iSize, jSize, sigmaH_mhd,sigmaP_mhd
 
-    character(len=*), parameter   :: NameSub='IM_put_from_ie'
     integer,intent(in)            :: nPoint, iPointStart, nVar
     real, intent(in)              :: Buff_V(nVar)
     type(IndexPtrType),intent(in) :: Index
     type(WeightPtrType),intent(in):: Weight
     logical,intent(in)            :: DoAdd
     integer :: iBlock,i,j
+    character(len=*), parameter:: NameSub = 'IM_put_from_ie'
     !--------------------------------------------------------------------------
     if(nPoint>1)then
        write(*,*)NameSub,': nPoint,iPointStart,Weight=',&
@@ -497,23 +487,19 @@ contains
     end if
 
   end subroutine IM_put_from_ie
-
   !============================================================================
-
   subroutine IM_put_from_ie_complete
 
     use RCM_variables, ONLY: &
          v, birk_mhd, iSize, jSize, sigmaH_mhd,sigmaP_mhd, n_gc
-
+    !--------------------------------------------------------------------------
     call wrap_around_ghostcells(v,isize,jsize,n_gc)
     call wrap_around_ghostcells(birk_mhd,isize,jsize,n_gc)
     call wrap_around_ghostcells(sigmaH_mhd,isize,jsize,n_gc)
     call wrap_around_ghostcells(sigmaP_mhd,isize,jsize,n_gc)
 
   end subroutine IM_put_from_ie_complete
-
   !============================================================================
-
   subroutine IM_put_from_gm_line(nRadiusIn, nLonIn, Map_DSII, &
        nVarLineIn, nPointLineIn, BufferLine_VI, NameVar)
 
@@ -522,18 +508,14 @@ contains
     integer, intent(in) :: nVarLineIn, nPointLineIn
     real,    intent(in) :: BufferLine_VI(nVarLineIn,nPointLineIn)
     character(len=*), intent(in) :: NameVar
-
+    !--------------------------------------------------------------------------
     call CON_stop('IM_put_from_gm_line should not be called for IM/RCM2')
 
   end subroutine IM_put_from_gm_line
-
   !============================================================================
-
   subroutine IM_put_from_gm(Buffer_IIV,BufferKp,iSizeIn,jSizeIn,nVarIn,NameVar)
 
     use RCM_variables
-
-    character (len=*),parameter :: NameSub='IM_put_from_gm'
 
     integer, intent(in) :: iSizeIn,jSizeIn,nVarIn
     real,    intent(in) :: BufferKp
@@ -544,6 +526,7 @@ contains
          p_=6, HpRho_=5, HpP_=6, OpRho_=7, OpP_=8
     integer :: pe_ = -1
     logical :: DoTest, DoTestMe
+    character(len=*), parameter:: NameSub = 'IM_put_from_gm'
     !--------------------------------------------------------------------------
     call CON_set_do_test(NameSub, DoTest, DoTestMe)
 
@@ -602,7 +585,7 @@ contains
        where(Buffer_IIV(:,:,Hprho_) /= 0.0)
           temperatureHp (1:iSize,1:jSize) = &
                Buffer_IIV(:,:,Hpp_)/(Buffer_IIV(:,:,Hprho_)/xmass(2))/1.6E-19
-          !in eV,assuming p=nkT, [p/n]=J,J/e-->eV
+          ! in eV,assuming p=nkT, [p/n]=J,J/e-->eV
           ! partition the electron energy
           temperatureTe(1:isize,1:jsize) = &
                Buffer_IIV(:,:,pe_)/(Buffer_IIV(:,:,Hprho_)/xmass(2))/1.6E-19
@@ -656,10 +639,11 @@ contains
     kpYoung = max(0.0,BufferKp)
 
   contains
-
     !==========================================================================
-    !write values sent to IM from GM
     subroutine write_data
+
+      ! write values sent to IM from GM
+
       use ModIoUnit, ONLY: UnitTmp_
       use ModUtilities, ONLY: open_file, close_file
 
@@ -667,7 +651,6 @@ contains
       integer:: i,j
       integer:: nCall=0
       !------------------------------------------------------------------------
-
       nCall=nCall+1
       write(filename,'(a,i5.5,a)')"gm2im_debug_",nCall,".dat"
       call open_file(FILE=filename)
@@ -688,7 +671,7 @@ contains
                  Buffer_IIV(i,j,vol_),Buffer_IIV(i,j,z0x_),Buffer_IIV(i,j,z0y_), &
                  Buffer_IIV(i,j,bmin_),Buffer_IIV(i,j,rho_),Buffer_IIV(i,j,p_)
          else
-            !multi-fluid
+            ! multi-fluid
             write(UnitTmp_,'(2i4,6G14.6)') j,i, &
                  Buffer_IIV(i,j,vol_), &
                  Buffer_IIV(i,j,z0x_), &
@@ -703,18 +686,16 @@ contains
       call close_file
 
     end subroutine write_data
-
+    !==========================================================================
   end subroutine IM_put_from_gm
-
   !============================================================================
-
   subroutine IM_put_sat_from_gm(nSats, Buffer_I, Buffer_III)
+
     ! Puts satellite locations and names from GM into IM variables.
-!!!DTW 2007
+!!! DTW 2007
+
     use RCM_variables, ONLY: nImSats, DoWriteSats, NameSat_I, SatLoc_3I
     use ModNumConst,   ONLY: cDegToRad
-
-    character (len=*),parameter :: NameSub='IM_put_sat_from_gm'
 
     ! Arguments
     integer, intent(in)            :: nSats
@@ -723,6 +704,7 @@ contains
 
     ! Internal variables
     integer :: iError, iSat, l1, l2
+    character(len=*), parameter:: NameSub = 'IM_put_sat_from_gm'
     !--------------------------------------------------------------------------
     ! Activate satellite writing in RCM
     DoWriteSats = .true.
@@ -750,22 +732,19 @@ contains
     SatLoc_3I(2,2,:) =        SatLoc_3I(2,2,:)  * cDegToRad
 
   end subroutine IM_put_sat_from_gm
-
   !============================================================================
-
   subroutine IM_get_for_gm(Buffer_IIV,iSizeIn,jSizeIn,nVar,NameVar)
 
     use CON_time, ONLY : get_time
     use RCM_variables
     use ModNumConst, ONLY: cRadToDeg
 
-    character (len=*),parameter :: NameSub='IM_get_for_gm'
-
     integer, intent(in)                                :: iSizeIn,jSizeIn,nVar
     real, dimension(iSizeIn,jSizeIn,nVar), intent(out) :: Buffer_IIV
     character (len=*),intent(in)                       :: NameVar
 
-    !LOCAL VARIABLES:
+    ! local variables
+
     real :: tSimulation
     integer :: iTimeStart
     integer, parameter :: pe_=1, pres_=2, dens_=3, &
@@ -773,6 +752,7 @@ contains
 
     integer :: i,j,k
     logical :: DoTest, DoTestMe
+    character(len=*), parameter:: NameSub = 'IM_get_for_gm'
     !--------------------------------------------------------------------------
     if(nVar > 3)DoMultiFluidGMCoupling = .true.
 
@@ -808,7 +788,7 @@ contains
 
     Buffer_IIV = 0.
 
-    !Fill pressure and density
+    ! Fill pressure and density
     do i=1,iSize; do j=1,jSize
        if( i<imin_j(j) .or. vm(i,j) <= 0.0 ) then
           Buffer_IIV(i,j,pe_) = -1.
@@ -880,7 +860,7 @@ contains
           call CON_stop(NameSub//': Not a number found in IM density !')
        end if
 
-       !multi-fluid
+       ! multi-fluid
        if(DoMultiFluidGMCoupling)then
           if(  .not. Buffer_IIV(i,j,Hpres_) > 0 .and. &
                .not. Buffer_IIV(i,j,Hpres_) < 1) then
@@ -959,59 +939,47 @@ contains
     if(DoTestMe)write(*,*) NameSub,' finished'
 
   end subroutine IM_get_for_gm
-
   !============================================================================
-
   subroutine IM_init_session(iSession, TimeSimulation)
 
     use RCM_variables, ONLY: iUnitOut
 
-    !INPUT PARAMETERS:
     integer,  intent(in) :: iSession         ! session number (starting from 1)
     real,     intent(in) :: TimeSimulation   ! seconds from start time
 
-    character(len=*), parameter :: NameSub='IM_init_session'
-
     logical :: IsUninitialized = .true.
+
+    character(len=*), parameter:: NameSub = 'IM_init_session'
     !--------------------------------------------------------------------------
 
-    ! IM will be initialized after being coupled to GM
-    RETURN
-
   end subroutine IM_init_session
-
   !============================================================================
-
   subroutine IM_finalize(TimeSimulation)
 
     use RCM_variables, ONLY: iUnitOut
 
-    !INPUT PARAMETERS:
     real,     intent(in) :: TimeSimulation   ! seconds from start time
 
-    !LOCAL VARIABLES:
-    character(len=*), parameter :: NameSub='IM_finalize'
-    !--------------------------------------------------------------------------
+    ! local variables
 
+    character(len=*), parameter:: NameSub = 'IM_finalize'
+    !--------------------------------------------------------------------------
     call IM_write_prefix; write(iUnitOut,*) &
          NameSub,' at TimeSimulation=',TimeSimulation
 
     call RCM_advec (3, 0, 0, 0)
 
   end subroutine IM_finalize
-
   !============================================================================
-
   subroutine IM_save_restart(TimeSimulation)
 
     use CON_coupler, ONLY: NameRestartOutDirComp
     use RCM_variables, ONLY: iUnitOut, NameRestartOutDir
 
-    !INPUT PARAMETERS:
     real,     intent(in) :: TimeSimulation   ! seconds from start time
 
-    character(len=*), parameter :: NameSub='IM_save_restart'
-    !-------------------------------------------------------------------------
+    character(len=*), parameter:: NameSub = 'IM_save_restart'
+    !--------------------------------------------------------------------------
     call IM_write_prefix; write(iUnitOut,*) &
          NameSub,' at TimeSimulation=',TimeSimulation
 
@@ -1020,25 +988,22 @@ contains
     call RCM_advec (4, nint(TimeSimulation), nint(TimeSimulation), 0)
 
   end subroutine IM_save_restart
-
-  !BOP ========================================================================
-  !ROUTINE: IM_run - run IM
-  !INTERFACE:
+  !============================================================================
   subroutine IM_run(TimeSimulation,TimeSimulationLimit)
 
-    !USES:
+    ! run IM
+
     use RCM_variables, ONLY: iDtRcm, IsUninitialized, DoneGmCoupling
 
-    !INPUT/OUTPUT ARGUMENTS:
     real, intent(inout):: TimeSimulation   ! current time of component
 
-    !INPUT ARGUMENTS:
     real, intent(in):: TimeSimulationLimit ! simulation time not to be exceeded
 
-    !LOCAL VARIABLES:
+    ! local variables
+
     integer :: iDtNow, iTimeEnd, iTimeStart
-    character(len=*), parameter :: NameSub='IM_run'
     logical :: DoTest, DoTestMe
+    character(len=*), parameter:: NameSub = 'IM_run'
     !--------------------------------------------------------------------------
     call CON_set_do_test(NameSub,DoTest,DoTestMe)
 
@@ -1066,19 +1031,16 @@ contains
     TimeSimulation   = TimeSimulation + iDtNow
 
   end subroutine IM_run
-
+  !============================================================================
 end module IM_wrapper
-
-!===========================================================================
-
+!==============================================================================
 subroutine IM_write_prefix
 
   use RCM_variables, ONLY: iUnitOut, STDOUT_, StringPrefix
 
   implicit none
-
+  !----------------------------------------------------------------------------
   if(iUnitOut==STDOUT_)write(*,'(a)',ADVANCE='NO')trim(StringPrefix)
 
 end subroutine IM_write_prefix
-
-
+!==============================================================================
