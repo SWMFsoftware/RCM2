@@ -21,6 +21,7 @@ module IM_wrapper
   public:: IM_finalize
 
   ! Coupling with IE
+  public:: IM_get_info_for_ie
   public:: IM_get_for_ie
   public:: IM_put_from_ie_mpi
   public:: IM_put_from_ie
@@ -346,6 +347,16 @@ contains
     call close_file
 
   end subroutine IM_print_variables
+  !============================================================================
+  subroutine IM_get_info_for_ie(nEngIM)
+
+    character(len=*), parameter :: NameSub='IM_get_info_for_ie'
+
+    integer, intent(out) :: nEngIM
+
+    call CON_stop(NameSub//': IM_get_info_for_ie cannot be used with RCM2')
+
+  end subroutine IM_get_info_for_ie
   !============================================================================
   subroutine IM_get_for_ie(nPoint,iPointStart,Index,Weight,Buff_V,nVar)
 
