@@ -199,7 +199,7 @@ contains
 
   end subroutine RCM_advec0
   !===========================================================================
-  subroutine RCM_advec (icontrol, itimei, itimef, idt)
+  subroutine RCM_advec(icontrol, itimei, itimef, idt)
 
     ! Controlling RCM as subroutine
     use ModIoUnit, ONLY: io_unit_new
@@ -246,19 +246,21 @@ contains
     REAL (rprec) :: dt
     !
     character(len=80) :: filename
-    !
+
+    character(len=*), parameter:: NameSub = 'RCM_advec'
+
     SAVE
     !--------------------------------------------------------------------------
     !  call IM_write_prefix
     !  write(iUnitOut,'(A,I8,A,I8,A,I2)') &
     !       '  PE=',iProc+1,' of ',nProc,' starting.  icontrol=',icontrol
-    time0=MPI_Wtime()
+    time0 = MPI_Wtime()
     !
     !
     select case (icontrol)
     case(0)      ! JUST READ THE GRID
 
-       CALL Read_grid ()
+       call read_grid
 
     case(1)      ! INITIALIZE
 
@@ -280,15 +282,14 @@ contains
        j2   = jsize - 1
        iint = 1 
        jint = 1      
-       !
-       !
-       CALL Read_grid ()
-       !
-       CALL Read_plasma ()
-       !
-       !
-       call open_file(FILE = trim(NameRcmDir)//'rcm.params', STATUS = 'OLD')
-       !
+
+       call read_grid
+
+       call read_plasma
+
+       call open_file(FILE = trim(NameRcmDir)//'rcm.params', STATUS = 'OLD', &
+            NameCaller=NameSub)
+
        READ (LUN,*) !     READ (LUN,*) itimei   ! 1.  start time
        READ (LUN,*) !     READ (LUN,*) itimef   ! 2.  end time
        READ (LUN,*) irdr     ! 3.  record # to read in
@@ -328,13 +329,11 @@ contains
        sunspot_number = 125
        f107           = 169
        doy            = 90
-       !
-       call close_file
-       !
+
+       call close_file(NameCaller=NameSub)
+
        i1 = imin + 1 
-       !
-       !
-       !
+
        !  Read in other inputs, both constant and run-specific:
        CALL Read_vdrop  ()
        CALL Read_kp     ()
@@ -364,10 +363,10 @@ contains
           WRITE (iUnitOut,'(A)') '   Reading Restart File ...'
           !Open and read binary file
           write(filename,'(a)') "RCMrestart.rst"
-          call open_file(FILE=trim(NameRcmDir)//"restartIN/"//filename, STATUS='old', &
-               FORM='unformatted')
+          call open_file(FILE=trim(NameRcmDir)//"restartIN/"//filename, &
+               STATUS='old', FORM='unformatted', NameCaller=NameSub)
           read(LUN) eeta
-          call close_file
+          call close_file(NameCaller=NameSub)
           !  Replace eeta at boundaries only because we are reading from restart file.
           CALL Get_boundary (boundary, bndloc)
           CALL Rcm_plasma_bc (2, 1)
@@ -494,7 +493,7 @@ contains
        !
     case(3)    ! FINALIZE
        !
-       call close_file(LUN_3)
+       call close_file(LUN_3, NameCaller=NameSub)
        CALL MPI_BARRIER(iComm,ierror) ! ----------- BARRIER ------
        RETURN
 
@@ -533,9 +532,11 @@ contains
       END IF
       ! Added for SWMF
       LUN_2 = io_unit_new()
-      call open_file(LUN_2, FILE=trim(NameRcmDir)//'rcm.printout', STATUS=ST, POSITION=PS)
+      call open_file(LUN_2, FILE=trim(NameRcmDir)//'rcm.printout', &
+           STATUS=ST, POSITION=PS, NameCaller=NameSub)
       LUN_3 = io_unit_new()
-      call open_file(LUN_3, FILE=trim(NameRcmDir)//'rcm.index', STATUS=ST, POSITION=PS)
+      call open_file(LUN_3, FILE=trim(NameRcmDir)//'rcm.index', &
+           STATUS=ST, POSITION=PS, NameCaller=NameSub)
       WRITE (LUN_3,'(T2,A)',ADVANCE='NO') TRIM(HD)
       WRITE (LUN_3,'(A11,A4,A1,A2,A1,A2, A8,A2,A1,A2,A1,A2)') &
            '  TODAY IS ', real_date(1:4), '/', real_date(5:6), '/', real_date(7:8), &
@@ -597,15 +598,14 @@ contains
       WRITE (LUN_2,'(T2,A,T20,I2)')     'ICOND = ',   icond
       WRITE (LUN_2,'(T2,A,T20,I2)')     'IBND = ',    ibnd_type
       WRITE (LUN_2,'(T2,A,T20,I2)')     'IPCP_TYPE=', ipcp_type
-      !
-      call close_file(LUN_2)
-      !
-      !
+
+      call close_file(LUN_2, NameCaller=NameSub)
+
 902   FORMAT (T2,'TIME', T12,'ITIME' , T19,'REC#' ,&
            T26,'VDROP', T33,'KP', T39,'FSTOFF',   &
            T46,'FMEB', T53, 'DST', T62,'FCLPS', T69,'VDROP_PHASE' )
 
-    END SUBROUTINE Initial_printout
+    end subroutine initial_printout
     !
     !
     subroutine Write_Label(i_write_time)
@@ -724,10 +724,11 @@ contains
       !Open file
       select case(plot_format(iFN))
       case('tec')
-         call open_file(FILE=trim(NameRcmDir)//"plots/"//filename)
+         call open_file(FILE=trim(NameRcmDir)//"plots/"//filename, &
+              NameCaller=NameSub)
       case('idl')
          call open_file(FILE=trim(NameRcmDir)//"plots/"//filename, &
-              FORM='unformatted')
+              FORM='unformatted', NameCaller=NameSub)
       end select
 
       ! Write plot file: header followed by the data
@@ -1323,7 +1324,7 @@ contains
 
       end select
 
-      call close_file
+      call close_file(NameCaller=NameSub)
 
     end SUBROUTINE Disk_write_arrays
     !=========================================================================
@@ -1354,20 +1355,21 @@ contains
       inquire(file=NameSatFile, exist=IsExist)
 
       if ( (.not.IsExist) .or. IsFirstWrite ) then
-         call open_file(FILE=trim(NameSatFile))
+         call open_file(FILE=trim(NameSatFile), NameCaller=NameSub)
 
          ! Write header
          write(LUN, '(2a)')'RCM results for SWMF trajectory file ', &
               trim(NameSat_I(iSatIn))
          write(LUN,'(a40,i3.3)')'Number of header variables:', nHeadVar + 2
-         write(LUN,*)'iter simTime X Y Z lat lon status interLat interLon Xmin Ymin Vm'
+         write(LUN,*) 'iter simTime X Y Z lat lon status interLat interLon Xmin Ymin Vm'
          write(LUN,*) 'Number of distribution variables:', nDistVar+2
          write(LUN,*) 'Number of energy channels:', kcsize
          write(LUN,*) 'k species alamc eeta energy[eV] density[cm^-3]'
 
 
       else
-         call open_file(FILE=trim(NameSatFile), STATUS='OLD', POSITION='append')
+         call open_file(FILE=trim(NameSatFile), STATUS='OLD', &
+              POSITION='append', NameCaller=NameSub)
       end if
 
       ! Collect variables.
@@ -1401,21 +1403,22 @@ contains
            '   Saving Restart at T=',iCurrentTime,'s ('//time_char//') '
 
       ! Open and write text file
-      call open_file(FILE=trim(NameRestartOutDir)//"RCMrestart.txt")
+      call open_file(FILE=trim(NameRestartOutDir)//"RCMrestart.txt", &
+           NameCaller=NameSub)
       write(LUN,*) label
-      call close_file
+      call close_file(NameCaller=NameSub)
 
       ! Open and write binary file
       call open_file(FILE=trim(NameRestartOutDir)//"RCMrestart.rst", &
-           FORM='unformatted')
+           FORM='unformatted', NameCaller=NameSub)
       write(LUN) eeta
-      call close_file
+      call close_file(NameCaller=NameSub)
 
     end subroutine Save_Restart
     !
-    !
-    SUBROUTINE Clean_up_edges ()
-      IMPLICIT NONE
+    subroutine clean_up_edges ()
+      implicit none
+
       INTEGER (iprec) :: k
       !
       !        Check if pts need to be deleted or added:

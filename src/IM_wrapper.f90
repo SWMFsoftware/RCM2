@@ -318,7 +318,7 @@ contains
 
     nFile=nFile+1
     write(NameFile,'(a,i1,a)')'IM_from_'//NameSource//'_',nFile,'.dat'
-    call open_file(FILE=NameFile)
+    call open_file(FILE=NameFile, NameCaller=NameSub)
     write(UnitTmp_,'(a)')trim(NameVar)
 
     do i=1,iSize
@@ -344,7 +344,7 @@ contains
           end select
        end do
     end do
-    call close_file
+    call close_file(NameCaller=NameSub)
 
   end subroutine IM_print_variables
   !============================================================================
@@ -661,10 +661,11 @@ contains
       character(LEN=80):: filename
       integer:: i,j
       integer:: nCall=0
+      character(len=*), parameter:: NameSub = 'write_data'
       !------------------------------------------------------------------------
       nCall=nCall+1
       write(filename,'(a,i5.5,a)')"gm2im_debug_",nCall,".dat"
-      call open_file(FILE=filename)
+      call open_file(FILE=filename, NameCaller=NameSub)
       write(UnitTmp_,'(a)') 'TITLE="gm2im debug values"'
       if(.not. DoMultiFluidGMCoupling)then
          write(UnitTmp_,'(a)') &
@@ -694,7 +695,7 @@ contains
                  Buffer_IIV(i,j,Opp_)
          end if
       end do; end do
-      call close_file
+      call close_file(NameCaller=NameSub)
 
     end subroutine write_data
     !==========================================================================
@@ -703,7 +704,6 @@ contains
   subroutine IM_put_sat_from_gm(nSats, Buffer_I, Buffer_III)
 
     ! Puts satellite locations and names from GM into IM variables.
-!!! DTW 2007
 
     use RCM_variables, ONLY: nImSats, DoWriteSats, NameSat_I, SatLoc_3I
     use ModNumConst,   ONLY: cDegToRad
