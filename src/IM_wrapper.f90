@@ -348,11 +348,12 @@ contains
 
   end subroutine IM_print_variables
   !============================================================================
-  subroutine IM_get_info_for_ie(nEngIM)
+  subroutine IM_get_info_for_ie(nEngIM, EngIM)
 
     character(len=*), parameter :: NameSub='IM_get_info_for_ie'
 
     integer, intent(out) :: nEngIM
+    real, intent(out), optional :: EngIM(:, :)
 
     call CON_stop(NameSub//': IM_get_info_for_ie cannot be used with RCM2')
 
